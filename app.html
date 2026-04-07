@@ -255,9 +255,18 @@
         <div class="modal-header"><div class="modal-title">Editar venta</div><button class="modal-close" onclick="cerrarModal('modalEdit')">✕</button></div>
         <div class="modal-form">
             <input type="hidden" id="editId">
+            <div class="form-group"><label>Tipo de Seguro</label>
+                <select id="editTipo" onchange="onEditTipoChange()"><option value="">Selecciona...</option></select>
+            </div>
+            <div class="form-group"><label>Nivel / Variante</label>
+                <select id="editNivel" disabled onchange="recalcularEdit()"><option value="">—</option></select>
+            </div>
             <div class="form-group"><label>Póliza</label><input type="text" id="editPoliza"></div>
             <div class="form-group"><label>Cliente</label><input type="text" id="editCliente"></div>
-            <div class="form-group"><label>Precio Tarifa (€)</label><input type="number" id="editTarifa" step="0.01"></div>
+            <div class="form-group"><label>Fecha Efecto</label><input type="date" id="editFecha"></div>
+            <div class="form-group"><label>Precio Tarifa (€)</label><input type="number" id="editTarifa" step="0.01" oninput="recalcularEdit()"></div>
+            <div class="form-group"><label>Valor Calculado (€)</label><input type="number" id="editValor" readonly class="valor-field"></div>
+            <div class="form-group"><label>Puntos</label><input type="number" id="editPuntos" readonly class="puntos-field"></div>
             <div class="form-group"><label>Mes Contable</label><input type="month" id="editMesContable"></div>
             <div class="form-group"><label>Nota (si mueves el mes)</label><input type="text" id="editNota" placeholder="Ej: movido de enero a febrero"></div>
             <button class="btn btn-primary" onclick="guardarEdicion()" style="width:100%;">💾 Guardar cambios</button>
@@ -343,8 +352,16 @@ async function cargarVentas(){
 
 async function cargarCierres(){
     const{data,error}=await db.from('cierres').select('*').eq('usuario_id',usuarioId).order('mes',{ascending:true});
-    if(error){console.warn('Sin tabla cierres:',error.message);cierres=[];}
-    else cierres=data||[];
+    if(error||!data||!data.length){
+        // Fechas de liquidación 2026 según calendario oficial
+        const LIQUID_2026=[
+            {mes:'2026-01',dia:'23'},{mes:'2026-02',dia:'23'},{mes:'2026-03',dia:'24'},
+            {mes:'2026-04',dia:'24'},{mes:'2026-05',dia:'22'},{mes:'2026-06',dia:'23'},
+            {mes:'2026-07',dia:'24'},{mes:'2026-08',dia:'24'},{mes:'2026-09',dia:'23'},
+            {mes:'2026-10',dia:'23'},{mes:'2026-11',dia:'23'},{mes:'2026-12',dia:'21'}
+        ];
+        cierres=LIQUID_2026.map(x=>({mes:x.mes,fecha_cierre:'',fecha_liquidacion:`${x.mes}-${x.dia}`}));
+    }else{cierres=data;}
     renderCierres();
 }
 
@@ -388,10 +405,40 @@ async function eliminarVenta(id){
 
 function abrirEdicion(id){
     const v=ventas.find(v=>v.id===id);if(!v)return;
+
+    // Rellenar selector de tipos
+    const selTipo=document.getElementById('editTipo');
+    selTipo.innerHTML='<option value="">Selecciona...</option>';
+    const cats={};
+    for(let k in seguros){const s=seguros[k];if(!cats[s.categoria])cats[s.categoria]=[];cats[s.categoria].push({k,...s});}
+    const labels={decesos:'🛡️ Decesos',hogar:'🏠 Hogar',vida:'❤️ Vida',salud:'🏥 Salud',otros:'📋 Otros'};
+    for(let cat in cats){const og=document.createElement('optgroup');og.label=labels[cat]||cat;cats[cat].forEach(s=>{const o=document.createElement('option');o.value=s.k;o.textContent=s.nombre;og.appendChild(o);});selTipo.appendChild(og);}
+
+    // Buscar la clave del tipo actual
+    let claveActual='',nivelActual='';
+    for(let k in seguros){
+        const s=seguros[k];
+        if(!s.tieneNiveles&&v.tipoNombre===s.nombre){claveActual=k;break;}
+        if(s.tieneNiveles){for(let niv in(s.niveles||{})){if(v.tipoNombre===s.nombre+' ('+niv+')'){claveActual=k;nivelActual=niv;break;}}if(claveActual)break;}
+    }
+    selTipo.value=claveActual;
+
+    // Rellenar niveles si aplica
+    const selNivel=document.getElementById('editNivel');
+    selNivel.innerHTML='<option value="">—</option>';
+    if(claveActual&&seguros[claveActual]?.tieneNiveles){
+        selNivel.disabled=false;
+        for(let n in seguros[claveActual].niveles){selNivel.innerHTML+=`<option value="${n}">${n}</option>`;}
+        selNivel.value=nivelActual;
+    }else{selNivel.disabled=true;}
+
     document.getElementById('editId').value=id;
     document.getElementById('editPoliza').value=v.poliza;
     document.getElementById('editCliente').value=v.cliente;
+    document.getElementById('editFecha').value=v.fecha;
     document.getElementById('editTarifa').value=v.precio;
+    document.getElementById('editValor').value=v.valor;
+    document.getElementById('editPuntos').value=v.puntos;
     document.getElementById('editMesContable').value=v.mesContable||v.mes;
     document.getElementById('editNota').value=v.notaMovida||'';
     document.getElementById('modalEdit').classList.add('open');
@@ -400,26 +447,57 @@ function abrirEdicion(id){
 async function guardarEdicion(){
     const id=document.getElementById('editId').value;
     const v=ventas.find(v=>v.id===id);if(!v)return;
+    const tipo=document.getElementById('editTipo').value;
+    const nivel=document.getElementById('editNivel').value;
     const nuevoPrecio=parseFloat(document.getElementById('editTarifa').value);
     const nuevoMes=document.getElementById('editMesContable').value;
     const nuevaNota=document.getElementById('editNota').value.trim();
-    const match=encontrarSeguroPorNombre(v.tipoNombre);
-    let nv=v.valor,np=v.puntos;
-    if(match){
-        const{seg,nivel}=match;
+    const nuevaFecha=document.getElementById('editFecha').value;
+
+    let tipoNombre=v.tipoNombre,categoria=v.categoria,nv=v.valor,np=v.puntos;
+    if(tipo&&seguros[tipo]){
+        const seg=seguros[tipo];
+        tipoNombre=seg.nombre+(nivel?` (${nivel})`:'');
+        categoria=seg.categoria;
         const rv=(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel])?seg.niveles[nivel].valor:(seg.valor||0);
         const rp=(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel])?seg.niveles[nivel].puntos:(seg.puntos||0);
-        nv=parseFloat((nuevoPrecio*rv/100).toFixed(2));np=parseFloat((nuevoPrecio*rp/100).toFixed(2));
+        nv=parseFloat((nuevoPrecio*rv/100).toFixed(2));
+        np=parseFloat((nuevoPrecio*rp/100).toFixed(2));
     }
+    const mesFecha=nuevaFecha.slice(0,7);
     const updated={...v,poliza:document.getElementById('editPoliza').value,cliente:document.getElementById('editCliente').value,
-        precio:nuevoPrecio,valor:nv,puntos:np,mesContable:nuevoMes,
-        movida:nuevoMes!==(v.mes||v.fecha?.slice(0,7)),notaMovida:nuevaNota};
+        fecha:nuevaFecha,tipoNombre,categoria,precio:nuevoPrecio,valor:nv,puntos:np,
+        mes:mesFecha,mesContable:nuevoMes||mesFecha,
+        movida:(nuevoMes||mesFecha)!==mesFecha,notaMovida:nuevaNota};
     setSyncing(true);
     const{error}=await db.from('ventas').update(toSupabase(updated)).eq('id',id);
     if(error){toast('Error al guardar','error');setSyncing(false);return;}
     const idx=ventas.findIndex(v=>v.id===id);ventas[idx]=updated;
     renderTabla();renderTrimestres();renderResumen();renderStats();
     cerrarModal('modalEdit');toast('Cambios guardados ✓','success');setSyncing(false);
+}
+
+function onEditTipoChange(){
+    const tipo=document.getElementById('editTipo').value;
+    const selNivel=document.getElementById('editNivel');
+    selNivel.innerHTML='<option value="">—</option>';
+    if(tipo&&seguros[tipo]?.tieneNiveles){
+        selNivel.disabled=false;
+        for(let n in seguros[tipo].niveles){selNivel.innerHTML+=`<option value="${n}">${n}</option>`;}
+    }else{selNivel.disabled=true;}
+    recalcularEdit();
+}
+
+function recalcularEdit(){
+    const tipo=document.getElementById('editTipo').value;
+    const nivel=document.getElementById('editNivel').value;
+    const precio=parseFloat(document.getElementById('editTarifa').value)||0;
+    if(!tipo||!seguros[tipo]){return;}
+    const seg=seguros[tipo];
+    const rv=(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel])?seg.niveles[nivel].valor:(seg.valor||0);
+    const rp=(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel])?seg.niveles[nivel].puntos:(seg.puntos||0);
+    document.getElementById('editValor').value=(precio*rv/100).toFixed(2);
+    document.getElementById('editPuntos').value=(precio*rp/100).toFixed(2);
 }
 
 function renderCierres(){
