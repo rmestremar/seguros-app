@@ -1,0 +1,9 @@
+seguros-app/
+├── index.html        ← pantalla de login
+├── app.html          ← la app principal
+├── js/
+│   ├── auth.js       ← login y sesión
+│   ├── ventas.js     ← gestión de ventas
+│   └── supabase.js   ← conexión con la base de datos
+└── css/
+    └── styles.css    ← estilos
