@@ -3,668 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Seguros — App</title>
+    <title>Seguros — Ventas</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg:     #f0f4fa;
-            --bg2:    #ffffff;
-            --bg3:    #e8edf7;
-            --border: #d4daea;
-            --accent: #4f8ef7;
-            --accent2:#7c5cfc;
-            --success:#16a34a;
-            --warning:#d97706;
-            --danger: #dc2626;
-            --moved:  #ea580c;
-            --text:   #1a1f36;
-            --text2:  #4a5378;
-            --text3:  #8b93a7;
-            --card-shadow: 0 1px 6px rgba(0,0,0,0.06);
+            --bg:#f0f4fa; --bg2:#ffffff; --bg3:#e8edf7; --border:#d4daea;
+            --accent:#4f8ef7; --accent2:#7c5cfc; --success:#16a34a;
+            --warning:#d97706; --danger:#dc2626; --moved:#ea580c;
+            --text:#1a1f36; --text2:#4a5378; --text3:#8b93a7;
+            --card-shadow:0 2px 12px rgba(0,0,0,0.07);
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            font-size: 15px;
-        }
-
-        .header {
-            background: var(--bg2);
-            border-bottom: 1px solid var(--border);
-            padding: 14px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: var(--card-shadow);
-        }
-
-        .header-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--text);
-        }
-
-        .header-title .dot {
-            width: 10px; height: 10px;
-            background: var(--accent);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--accent);
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .sync-status {
-            font-size: 0.75rem;
-            color: var(--text3);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .sync-dot {
-            width: 7px; height: 7px;
-            border-radius: 50%;
-            background: var(--success);
-        }
-
-        .sync-dot.syncing {
-            background: var(--warning);
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        .btn-logout {
-            background: none;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 6px 12px;
-            font-size: 0.8rem;
-            color: var(--text3);
-            cursor: pointer;
-            font-family: 'DM Sans', sans-serif;
-            font-weight: 600;
-            transition: all 0.15s;
-        }
-        .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
-
-        .tabs-bar {
-            background: var(--bg2);
-            border-bottom: 1px solid var(--border);
-            padding: 0 16px;
-            display: flex;
-            gap: 4px;
-            overflow-x: auto;
-            scrollbar-width: none;
-        }
-
-        .tabs-bar::-webkit-scrollbar { display: none; }
-
-        .tab {
-            padding: 12px 16px;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: var(--text3);
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            white-space: nowrap;
-            transition: all 0.2s;
-        }
-
-        .tab:hover { color: var(--text2); }
-        .tab.active {
-            color: var(--accent);
-            border-bottom-color: var(--accent);
-        }
-
-        .main { padding: 16px; max-width: 900px; margin: 0 auto; }
-        .section { display: none; }
-        .section.active { display: block; }
-
-        .card {
-            background: var(--bg2);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 20px;
-            margin-bottom: 14px;
-            box-shadow: var(--card-shadow);
-        }
-
-        .card-title {
-            font-size: 0.7rem;
-            font-weight: 700;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--text3);
-            margin-bottom: 16px;
-        }
-
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 14px;
-        }
-
-        @media (min-width: 600px) {
-            .stats-row { grid-template-columns: repeat(4, 1fr); }
-        }
-
-        .stat-card {
-            background: var(--bg3);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 14px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            font-family: 'DM Mono', monospace;
-            color: var(--accent);
-            line-height: 1;
-            margin-bottom: 4px;
-        }
-
-        .stat-label {
-            font-size: 0.72rem;
-            color: var(--text3);
-            font-weight: 500;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 12px;
-        }
-
-        @media (min-width: 600px) {
-            .form-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        .form-group { display: flex; flex-direction: column; gap: 6px; }
-
-        label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--text2);
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-        }
-
-        input, select {
-            background: var(--bg3);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 11px 14px;
-            color: var(--text);
-            font-size: 15px;
-            font-family: 'DM Sans', sans-serif;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        input[readonly].valor-field  { color: var(--success); font-weight: 600; }
-        input[readonly].puntos-field { color: var(--accent);  font-weight: 600; }
-
-        .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'DM Sans', sans-serif;
-        }
-
-        .btn-primary { background: var(--accent); color: white; }
-        .btn-ghost   { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
-        .btn-success { background: var(--success); color: white; }
-        .btn-danger  { background: var(--danger); color: white; }
-
-        .btn-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 16px;
-        }
-
-        .table-wrap { overflow-x: auto; margin-top: 12px; border-radius: 10px; border: 1px solid var(--border); }
-
-        table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-
-        th {
-            padding: 11px 12px;
-            text-align: left;
-            font-size: 0.68rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: var(--text3);
-            background: var(--bg3);
-        }
-
-        td { padding: 11px 12px; border-top: 1px solid var(--border); }
-
-        tr:hover td { background: rgba(79,142,247,0.04); }
-        tr.movida td { background: rgba(234,88,12,0.05); }
-        tr.movida td:first-child { border-left: 3px solid var(--moved); }
-
-        .badge {
-            display: inline-block;
-            padding: 3px 9px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 600;
-        }
-
-        .badge-decesos { background: #fee2e2; color: #b91c1c; }
-        .badge-hogar   { background: #dbeafe; color: #1d4ed8; }
-        .badge-vida    { background: #ede9fe; color: #6d28d9; }
-        .badge-salud   { background: #dcfce7; color: #15803d; }
-        .badge-otros   { background: #f1f5f9; color: #475569; }
-        .badge-moved   { background: #ffedd5; color: var(--moved); margin-left: 5px; }
-
-        .empty-state { text-align: center; padding: 40px; color: var(--text3); font-size: 0.9rem; }
-
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.4);
-            z-index: 500;
-            justify-content: center;
-            align-items: flex-end;
-        }
-
-        @media (min-width: 600px) { .modal { align-items: center; padding: 20px; } }
-
-        .modal.open { display: flex; }
-
-        .modal-box {
-            background: var(--bg2);
-            border: 1px solid var(--border);
-            border-radius: 20px 20px 0 0;
-            padding: 24px 20px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 -4px 30px rgba(0,0,0,0.1);
-        }
-
-        @media (min-width: 600px) {
-            .modal-box { border-radius: 16px; max-width: 480px; box-shadow: 0 8px 40px rgba(0,0,0,0.12); }
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(80px);
-            background: var(--bg2);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 12px 20px;
-            border-radius: 30px;
-            font-size: 0.85rem;
-            z-index: 9999;
-            transition: transform 0.3s;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-        }
-
-        .toast.show    { transform: translateX(-50%) translateY(0); }
-        .toast.success { border-color: var(--success); color: var(--success); }
-        .toast.error   { border-color: var(--danger);  color: var(--danger); }
-
-        .filter-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
-        .filter-row input, .filter-row select { flex: 1; min-width: 140px; }
-
-        .btn-sm { padding: 6px 12px; font-size: 0.78rem; }
-
-        .info-box {
-            background: rgba(79,142,247,0.07);
-            border: 1px solid rgba(79,142,247,0.2);
-            border-radius: 10px;
-            padding: 12px 16px;
-            font-size: 0.85rem;
-            color: var(--text2);
-            margin-bottom: 14px;
-            line-height: 1.6;
-        }
-
-        .year-select { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; font-size: 0.85rem; color: var(--text2); }
-        .year-select select { width: auto; }
-
-        .trimestre-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
-        @media (min-width: 700px) { .trimestre-grid { grid-template-columns: repeat(2, 1fr); } }
-
-        .loading { display: flex; align-items: center; gap: 10px; padding: 24px; color: var(--text3); font-size: 0.9rem; }
-        .spinner {
-            width: 16px; height: 16px;
-            border: 2px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            flex-shrink: 0;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
-        .modal-title  { font-size: 1rem; font-weight: 700; }
-        .modal-close  {
-            background: var(--bg3);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 6px 10px;
-            color: var(--text2);
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        .modal-form { display: flex; flex-direction: column; gap: 14px; }
-
-        .cierre-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border);
-            align-items: center;
-            font-size: 0.85rem;
-        }
-        .cierre-row:last-child { border-bottom: none; }
-        .cierre-label { font-weight: 600; color: var(--text2); }
-        .cierre-input {
-            background: var(--bg3);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 7px 10px;
-            color: var(--text);
-            font-size: 0.82rem;
-            font-family: 'DM Sans', sans-serif;
-        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:15px; }
+        .header { background:var(--bg2); border-bottom:1px solid var(--border); padding:14px 20px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 1px 6px rgba(0,0,0,0.06); }
+        .header-title { font-size:1.1rem; font-weight:700; letter-spacing:-0.02em; display:flex; align-items:center; gap:10px; }
+        .header-title .dot { width:10px; height:10px; background:var(--accent); border-radius:50%; box-shadow:0 0 10px rgba(79,142,247,0.5); }
+        .header-right { display:flex; align-items:center; gap:16px; }
+        .sync-status { font-size:0.75rem; color:var(--text3); display:flex; align-items:center; gap:6px; }
+        .sync-dot { width:7px; height:7px; border-radius:50%; background:var(--success); }
+        .sync-dot.syncing { background:var(--warning); animation:pulse 1s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .btn-logout { font-size:0.78rem; font-weight:600; color:var(--text3); background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:6px 12px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+        .btn-logout:hover { color:var(--danger); border-color:var(--danger); }
+        .tabs-bar { background:var(--bg2); border-bottom:1px solid var(--border); padding:0 16px; display:flex; gap:4px; overflow-x:auto; scrollbar-width:none; }
+        .tabs-bar::-webkit-scrollbar { display:none; }
+        .tab { padding:12px 16px; font-size:0.82rem; font-weight:600; color:var(--text3); cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; transition:all 0.2s; }
+        .tab:hover { color:var(--text2); }
+        .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+        .main { padding:16px; max-width:900px; margin:0 auto; }
+        .section { display:none; }
+        .section.active { display:block; }
+        .card { background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:14px; box-shadow:var(--card-shadow); }
+        .card-title { font-size:0.7rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text3); margin-bottom:16px; }
+        .stats-row { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:14px; }
+        @media(min-width:600px){.stats-row{grid-template-columns:repeat(4,1fr)}}
+        .stat-card { background:var(--bg3); border:1px solid var(--border); border-radius:12px; padding:14px; text-align:center; }
+        .stat-value { font-size:1.5rem; font-weight:700; font-family:'DM Mono',monospace; color:var(--accent); line-height:1; margin-bottom:4px; }
+        .stat-label { font-size:0.72rem; color:var(--text3); font-weight:500; letter-spacing:0.05em; text-transform:uppercase; }
+        .form-grid { display:grid; grid-template-columns:1fr; gap:12px; }
+        @media(min-width:600px){.form-grid{grid-template-columns:repeat(2,1fr)}}
+        .form-group { display:flex; flex-direction:column; gap:6px; }
+        label { font-size:0.75rem; font-weight:600; color:var(--text2); letter-spacing:0.04em; text-transform:uppercase; }
+        input,select { background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:11px 14px; color:var(--text); font-size:15px; font-family:'DM Sans',sans-serif; }
+        input:focus,select:focus { outline:none; border-color:var(--accent); }
+        input[readonly].valor-field { color:var(--success); font-weight:600; }
+        input[readonly].puntos-field { color:var(--accent); font-weight:600; }
+        .btn { padding:12px 20px; border:none; border-radius:10px; font-weight:600; cursor:pointer; transition:all 0.2s; font-family:'DM Sans',sans-serif; font-size:0.9rem; }
+        .btn-primary { background:var(--accent); color:white; }
+        .btn-primary:hover { background:#3b7ef6; }
+        .btn-ghost { background:var(--bg3); color:var(--text2); border:1px solid var(--border); }
+        .btn-success { background:var(--success); color:white; }
+        .btn-danger { background:var(--danger); color:white; }
+        .btn-sm { padding:6px 12px; font-size:0.78rem; }
+        .btn-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
+        .table-wrap { overflow-x:auto; margin-top:12px; border-radius:10px; border:1px solid var(--border); }
+        table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+        th { padding:11px 12px; text-align:left; font-size:0.68rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); background:var(--bg3); }
+        td { padding:11px 12px; border-top:1px solid var(--border); }
+        tr:hover td { background:rgba(79,142,247,0.04); }
+        tr.movida td { background:rgba(234,88,12,0.05); }
+        tr.movida td:first-child { border-left:3px solid var(--moved); }
+        .badge { display:inline-block; padding:3px 9px; border-radius:20px; font-size:0.7rem; font-weight:600; }
+        .badge-decesos { background:#fce7f3; color:#9d174d; }
+        .badge-hogar   { background:#dbeafe; color:#1e40af; }
+        .badge-vida    { background:#ede9fe; color:#5b21b6; }
+        .badge-salud   { background:#dcfce7; color:#15803d; }
+        .badge-otros   { background:#f1f5f9; color:#475569; }
+        .badge-moved   { background:#ffedd5; color:var(--moved); margin-left:5px; }
+        .empty-state { text-align:center; padding:40px; color:var(--text3); font-size:0.9rem; }
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:500; justify-content:center; align-items:flex-end; }
+        @media(min-width:600px){.modal{align-items:center;padding:20px}}
+        .modal.open { display:flex; }
+        .modal-box { background:var(--bg2); border:1px solid var(--border); border-radius:20px 20px 0 0; padding:24px 20px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 -4px 24px rgba(0,0,0,0.12); }
+        @media(min-width:600px){.modal-box{border-radius:16px;max-width:480px}}
+        .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--bg2); border:1px solid var(--border); color:var(--text); padding:12px 20px; border-radius:30px; font-size:0.85rem; z-index:9999; transition:transform 0.3s; box-shadow:0 4px 16px rgba(0,0,0,0.12); }
+        .toast.show { transform:translateX(-50%) translateY(0); }
+        .toast.success { border-color:var(--success); color:var(--success); }
+        .toast.error { border-color:var(--danger); color:var(--danger); }
+        .filter-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+        .filter-row input,.filter-row select { flex:1; min-width:140px; }
+        .info-box { background:rgba(79,142,247,0.07); border:1px solid rgba(79,142,247,0.2); border-radius:10px; padding:12px 16px; font-size:0.85rem; color:var(--text2); margin-bottom:14px; line-height:1.6; }
+        .year-select { display:flex; align-items:center; gap:10px; margin-bottom:14px; font-size:0.85rem; color:var(--text2); }
+        .year-select select { width:auto; }
+        .trimestre-grid { display:grid; grid-template-columns:1fr; gap:14px; }
+        @media(min-width:700px){.trimestre-grid{grid-template-columns:repeat(2,1fr)}}
+        .loading { display:flex; align-items:center; gap:10px; padding:24px; color:var(--text3); font-size:0.9rem; }
+        .spinner { width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+        .modal-title { font-size:1rem; font-weight:700; }
+        .modal-close { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:6px 10px; color:var(--text2); cursor:pointer; font-size:0.9rem; }
+        .modal-form { display:flex; flex-direction:column; gap:14px; }
+        .cierre-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); align-items:center; font-size:0.85rem; }
+        .cierre-row:last-child { border-bottom:none; }
+        .cierre-label { font-weight:600; color:var(--text2); }
+        .cierre-input { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:7px 10px; color:var(--text); font-size:0.82rem; font-family:'DM Sans',sans-serif; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="header-title">
-        <div class="dot"></div>
-        Seguros
-    </div>
+    <div class="header-title"><div class="dot"></div>Seguros</div>
     <div class="header-right">
-        <div class="sync-status">
-            <div class="sync-dot" id="syncDot"></div>
-            <span id="syncText">Conectado</span>
-        </div>
+        <div class="sync-status"><div class="sync-dot" id="syncDot"></div><span id="syncText">Conectado</span></div>
         <button class="btn-logout" onclick="logout()">Salir</button>
     </div>
 </div>
 
 <div class="tabs-bar">
-    <div class="tab active" onclick="showTab('registro', event)">📋 Registro</div>
-    <div class="tab" onclick="showTab('trimestres', event)">📅 Trimestres</div>
-    <div class="tab" onclick="showTab('resumen', event)">📊 Resumen</div>
-    <div class="tab" onclick="showTab('cierres', event)">🗓️ Cierres</div>
-    <div class="tab" onclick="showTab('config', event)">⚙️ Config</div>
+    <div class="tab active" onclick="showTab('registro',event)">📋 Registro</div>
+    <div class="tab" onclick="showTab('trimestres',event)">📅 Trimestres</div>
+    <div class="tab" onclick="showTab('resumen',event)">📊 Resumen</div>
+    <div class="tab" onclick="showTab('cierres',event)">🗓️ Cierres</div>
+    <div class="tab" onclick="showTab('config',event)">⚙️ Config</div>
 </div>
 
 <div class="main">
 
-    <!-- REGISTRO -->
-    <div id="sec-registro" class="section active">
-        <div class="card">
-            <div class="card-title">Nueva venta</div>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Tipo de Seguro *</label>
-                    <select id="tipoSeguro" onchange="onTipoChange()">
-                        <option value="">Selecciona...</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Nivel / Variante</label>
-                    <select id="nivelSeguro" disabled onchange="calcular()">
-                        <option value="">—</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Nº Póliza *</label>
-                    <input type="text" id="numeroPoliza" placeholder="12345678">
-                </div>
-                <div class="form-group">
-                    <label>Cliente</label>
-                    <input type="text" id="nombreCliente" placeholder="Nombre del cliente">
-                </div>
-                <div class="form-group">
-                    <label>Precio Tarifa (€) *</label>
-                    <input type="number" id="precioTarifa" placeholder="0.00" step="0.01" oninput="calcular()">
-                </div>
-                <div class="form-group">
-                    <label>Fecha Efecto *</label>
-                    <input type="date" id="fechaEfecto" onchange="calcularMesContable()">
-                </div>
-                <div class="form-group">
-                    <label>Valor Calculado (€)</label>
-                    <input type="number" id="valorCalculado" readonly class="valor-field">
-                </div>
-                <div class="form-group">
-                    <label>Puntos</label>
-                    <input type="number" id="puntosCalculados" readonly class="puntos-field">
-                </div>
-                <div class="form-group">
-                    <label>Mes Contable</label>
-                    <input type="month" id="mesContable">
-                </div>
-                <div class="form-group" id="grupoMovida" style="display:none;">
-                    <label>Nota (mes movido)</label>
-                    <input type="text" id="notaMovida" placeholder="Ej: movido de enero a febrero">
-                </div>
-            </div>
-            <div class="btn-row">
-                <button class="btn btn-primary" onclick="guardarVenta()">💾 Guardar</button>
-                <button class="btn btn-ghost" onclick="limpiarForm()">↺ Limpiar</button>
-                <button class="btn btn-success" onclick="exportarCSV()">📥 CSV</button>
-            </div>
+<div id="sec-registro" class="section active">
+    <div class="card">
+        <div class="card-title">Nueva venta</div>
+        <div class="form-grid">
+            <div class="form-group"><label>Tipo de Seguro *</label><select id="tipoSeguro" onchange="onTipoChange()"><option value="">Selecciona...</option></select></div>
+            <div class="form-group"><label>Nivel / Variante</label><select id="nivelSeguro" disabled onchange="calcular()"><option value="">—</option></select></div>
+            <div class="form-group"><label>Nº Póliza *</label><input type="text" id="numeroPoliza" placeholder="12345678"></div>
+            <div class="form-group"><label>Cliente</label><input type="text" id="nombreCliente" placeholder="Nombre del cliente"></div>
+            <div class="form-group"><label>Precio Tarifa (€) *</label><input type="number" id="precioTarifa" placeholder="0.00" step="0.01" oninput="calcular()"></div>
+            <div class="form-group"><label>Fecha Efecto *</label><input type="date" id="fechaEfecto" onchange="calcularMesContable()"></div>
+            <div class="form-group"><label>Valor Calculado (€)</label><input type="number" id="valorCalculado" readonly class="valor-field"></div>
+            <div class="form-group"><label>Puntos</label><input type="number" id="puntosCalculados" readonly class="puntos-field"></div>
+            <div class="form-group"><label>Mes Contable</label><input type="month" id="mesContable"></div>
+            <div class="form-group" id="grupoMovida" style="display:none;"><label>Nota (mes movido)</label><input type="text" id="notaMovida" placeholder="Ej: movido de enero a febrero"></div>
         </div>
-
+        <div class="btn-row">
+            <button class="btn btn-primary" onclick="guardarVenta()">💾 Guardar</button>
+            <button class="btn btn-ghost" onclick="limpiarForm()">↺ Limpiar</button>
+            <button class="btn btn-success" onclick="exportarCSV()">📥 CSV</button>
+        </div>
+    </div>
+    <!-- TOTAL ACUMULADO -->
+    <div class="card">
+        <div class="card-title">Total acumulado</div>
         <div class="stats-row">
             <div class="stat-card"><div class="stat-value" id="st-ventas">0</div><div class="stat-label">Ventas</div></div>
+            <div class="stat-card"><div class="stat-value" id="st-importe">0€</div><div class="stat-label">Importe</div></div>
             <div class="stat-card"><div class="stat-value" id="st-valor">0€</div><div class="stat-label">Valor</div></div>
             <div class="stat-card"><div class="stat-value" id="st-puntos">0</div><div class="stat-label">Puntos</div></div>
-            <div class="stat-card"><div class="stat-value" id="st-mes">0</div><div class="stat-label">Este mes</div></div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">Historial</div>
-            <div class="filter-row">
-                <input type="month" id="filtroMes" onchange="renderTabla()">
-                <select id="filtroCategoria" onchange="renderTabla()">
-                    <option value="">Todas las categorías</option>
-                    <option value="decesos">Decesos</option>
-                    <option value="hogar">Hogar</option>
-                    <option value="vida">Vida</option>
-                    <option value="salud">Salud</option>
-                    <option value="otros">Otros</option>
-                </select>
-            </div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Póliza</th>
-                            <th>Cliente</th>
-                            <th>Tipo</th>
-                            <th>Tarifa</th>
-                            <th>Valor</th>
-                            <th>Pts</th>
-                            <th>Mes cble.</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbodyVentas"></tbody>
-                </table>
-            </div>
         </div>
     </div>
-
-    <!-- TRIMESTRES -->
-    <div id="sec-trimestres" class="section">
-        <div class="info-box">
-            <strong>Trimestres:</strong> T1 = Dic·Ene·Feb &nbsp;|&nbsp; T2 = Mar·Abr·May &nbsp;|&nbsp; T3 = Jun·Jul·Ago &nbsp;|&nbsp; T4 = Sep·Oct·Nov<br>
-            <small>Los puntos se asignan según el <strong>mes contable</strong> de cada venta.</small>
+    <!-- TOTAL MES ACTUAL -->
+    <div class="card">
+        <div class="card-title" id="st-mes-titulo">Este mes</div>
+        <div class="stats-row">
+            <div class="stat-card"><div class="stat-value" id="st-mes-ventas">0</div><div class="stat-label">Ventas</div></div>
+            <div class="stat-card"><div class="stat-value" id="st-mes-importe">0€</div><div class="stat-label">Importe</div></div>
+            <div class="stat-card"><div class="stat-value" id="st-mes-valor">0€</div><div class="stat-label">Valor</div></div>
+            <div class="stat-card"><div class="stat-value" id="st-mes-puntos">0</div><div class="stat-label">Puntos</div></div>
         </div>
-        <div class="year-select">
-            <label>Año:</label>
-            <select id="trimestreAnio" onchange="renderTrimestres()">
-                <option value="2025">2025</option>
-                <option value="2026" selected>2026</option>
-                <option value="2027">2027</option>
+    </div>
+</div>
+
+<div id="sec-trimestres" class="section">
+    <div class="info-box"><strong>Trimestres:</strong> T1 = Dic·Ene·Feb &nbsp;|&nbsp; T2 = Mar·Abr·May &nbsp;|&nbsp; T3 = Jun·Jul·Ago &nbsp;|&nbsp; T4 = Sep·Oct·Nov<br><small>Los puntos se asignan según el <strong>mes contable</strong> de cada venta.</small></div>
+    <div class="year-select"><label>Año:</label><select id="trimestreAnio" onchange="renderTrimestres()"><option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option></select></div>
+    <div class="trimestre-grid" id="trimestreGrid"></div>
+    <div style="margin-top:14px;text-align:center;"><button class="btn btn-success" onclick="exportarTrimestresCSV()">📥 Exportar trimestres CSV</button></div>
+</div>
+
+<div id="sec-resumen" class="section">
+    <!-- HISTORIAL (antes en Registro) -->
+    <div class="card">
+        <div class="card-title">Historial de ventas</div>
+        <div class="filter-row">
+            <input type="month" id="filtroMes" onchange="renderTabla()">
+            <select id="filtroCategoria" onchange="renderTabla()">
+                <option value="">Todas las categorías</option>
+                <option value="decesos">Decesos</option><option value="hogar">Hogar</option>
+                <option value="vida">Vida</option><option value="salud">Salud</option><option value="otros">Otros</option>
             </select>
         </div>
-        <div class="trimestre-grid" id="trimestreGrid"></div>
-        <div style="margin-top:14px; text-align:center;">
-            <button class="btn btn-success" onclick="exportarTrimestresCSV()">📥 Exportar trimestres CSV</button>
+        <div class="table-wrap">
+            <table><thead><tr><th>Fecha</th><th>Póliza</th><th>Cliente</th><th>Tipo</th><th>Tarifa</th><th>Valor</th><th>Pts</th><th>Mes cble.</th><th></th></tr></thead>
+            <tbody id="tbodyVentas"></tbody></table>
         </div>
     </div>
-
-    <!-- RESUMEN -->
-    <div id="sec-resumen" class="section">
-        <div class="card">
-            <div class="card-title">Resumen mensual</div>
-            <div class="form-group" style="margin-bottom:16px;">
-                <label>Mes</label>
-                <input type="month" id="resumenMes" onchange="renderResumen()">
-            </div>
-            <div class="stats-row">
-                <div class="stat-card"><div class="stat-value" id="res-ventas">0</div><div class="stat-label">Pólizas</div></div>
-                <div class="stat-card"><div class="stat-value" id="res-valor">0€</div><div class="stat-label">Valor</div></div>
-                <div class="stat-card"><div class="stat-value" id="res-puntos">0</div><div class="stat-label">Puntos</div></div>
-                <div class="stat-card"><div class="stat-value" id="res-media">0€</div><div class="stat-label">Media</div></div>
-            </div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Tipo</th>
-                            <th>Cant.</th>
-                            <th>Valor</th>
-                            <th>Puntos</th>
-                            <th>%</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbodyResumen"></tbody>
-                </table>
-            </div>
+    <!-- RESUMEN MENSUAL -->
+    <div class="card">
+        <div class="card-title">Resumen mensual</div>
+        <div class="form-group" style="margin-bottom:16px;"><label>Mes</label><input type="month" id="resumenMes" onchange="renderResumen()"></div>
+        <div class="stats-row">
+            <div class="stat-card"><div class="stat-value" id="res-ventas">0</div><div class="stat-label">Pólizas</div></div>
+            <div class="stat-card"><div class="stat-value" id="res-importe">0€</div><div class="stat-label">Importe</div></div>
+            <div class="stat-card"><div class="stat-value" id="res-valor">0€</div><div class="stat-label">Valor</div></div>
+            <div class="stat-card"><div class="stat-value" id="res-puntos">0</div><div class="stat-label">Puntos</div></div>
         </div>
+        <div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Cant.</th><th>Importe</th><th>Valor</th><th>Puntos</th><th>%</th></tr></thead><tbody id="tbodyResumen"></tbody></table></div>
     </div>
+</div>
 
-    <!-- CIERRES -->
-    <div id="sec-cierres" class="section">
-        <div class="info-box">
-            Los puntos se contabilizan según la <strong>fecha de liquidación</strong>.
-        </div>
-        <div class="card">
-            <div class="card-title">Fechas de cierre y liquidación 2026</div>
-            <div id="listaCierres"><div class="loading"><span class="spinner"></span>Cargando...</div></div>
-            <div class="btn-row">
-                <button class="btn btn-primary" onclick="guardarCierres()">💾 Guardar cambios</button>
-            </div>
-        </div>
+<div id="sec-cierres" class="section">
+    <div class="info-box">Los puntos se contabilizan según la <strong>fecha de liquidación</strong>.</div>
+    <div class="card">
+        <div class="card-title">Fechas de cierre y liquidación 2026</div>
+        <div id="listaCierres"><div class="loading"><span class="spinner"></span>Cargando...</div></div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="guardarCierres()">💾 Guardar cambios</button></div>
     </div>
+</div>
 
-    <!-- CONFIG -->
-    <div id="sec-config" class="section">
-        <div class="card">
-            <div class="card-title">Agregar nuevo seguro</div>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Nombre</label>
-                    <input type="text" id="cfgNombre" placeholder="Ej: Hogar Premium">
-                </div>
-                <div class="form-group">
-                    <label>Categoría</label>
-                    <select id="cfgCategoria">
-                        <option value="decesos">Decesos</option>
-                        <option value="hogar">Hogar</option>
-                        <option value="vida">Vida</option>
-                        <option value="salud">Salud</option>
-                        <option value="otros">Otros</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Ratio Valor (%)</label>
-                    <input type="number" id="cfgValor" placeholder="150" step="0.01">
-                </div>
-                <div class="form-group">
-                    <label>Ratio Puntos (%)</label>
-                    <input type="number" id="cfgPuntos" placeholder="100" step="0.01">
-                </div>
-            </div>
-            <div class="btn-row">
-                <button class="btn btn-primary" onclick="agregarSeguro()">➕ Agregar</button>
-            </div>
+<div id="sec-config" class="section">
+    <div class="card">
+        <div class="card-title">Agregar nuevo seguro</div>
+        <div class="form-grid">
+            <div class="form-group"><label>Nombre</label><input type="text" id="cfgNombre" placeholder="Ej: Hogar Premium"></div>
+            <div class="form-group"><label>Categoría</label><select id="cfgCategoria"><option value="decesos">Decesos</option><option value="hogar">Hogar</option><option value="vida">Vida</option><option value="salud">Salud</option><option value="otros">Otros</option></select></div>
+            <div class="form-group"><label>Ratio Valor (%)</label><input type="number" id="cfgValor" placeholder="150" step="0.01"></div>
+            <div class="form-group"><label>Ratio Puntos (%)</label><input type="number" id="cfgPuntos" placeholder="100" step="0.01"></div>
         </div>
-
-        <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                <div class="card-title" style="margin-bottom:0;">Seguros configurados</div>
-                <button class="btn btn-primary btn-sm" onclick="abrirModalAplicarRatios()">💾 Guardar y aplicar</button>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 90px 90px 36px;gap:8px;padding:6px 0;
-                        border-bottom:2px solid var(--border);font-size:0.68rem;font-weight:700;
-                        letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);">
-                <span>Seguro</span><span>Valor %</span><span>Puntos %</span><span></span>
-            </div>
-            <div id="listaConfig"></div>
-        </div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="agregarSeguro()">➕ Agregar</button></div>
     </div>
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div class="card-title" style="margin-bottom:0;">Seguros configurados</div>
+            <button class="btn btn-primary btn-sm" onclick="abrirModalAplicarRatios()">💾 Guardar y aplicar</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 90px 90px 36px;gap:8px;padding:6px 0;border-bottom:2px solid var(--border);font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);">
+            <span>Seguro</span><span>Valor %</span><span>Puntos %</span><span></span>
+        </div>
+        <div id="listaConfig"></div>
+    </div>
+</div>
 
 </div>
 
-<!-- MODAL APLICAR RATIOS -->
 <div id="modalAplicarRatios" class="modal">
     <div class="modal-box">
-        <div class="modal-header">
-            <div class="modal-title">Guardar y aplicar ratios</div>
-            <button class="modal-close" onclick="cerrarModal('modalAplicarRatios')">✕</button>
-        </div>
+        <div class="modal-header"><div class="modal-title">Guardar y aplicar ratios</div><button class="modal-close" onclick="cerrarModal('modalAplicarRatios')">✕</button></div>
         <div class="modal-form">
-            <p style="font-size:0.88rem;color:var(--text2);line-height:1.6;margin-bottom:4px;">
-                Los nuevos ratios de valor y puntos se guardarán para todas las ventas nuevas.<br>
-                Indica desde qué fecha quieres <strong>recalcular también los registros ya existentes</strong>.
-            </p>
-            <div class="form-group">
-                <label>Aplicar desde la fecha *</label>
-                <input type="date" id="aplicarDesde">
-            </div>
-            <div id="aplicarPreview" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;
-                padding:12px 14px;font-size:0.82rem;color:var(--text3);display:none;line-height:1.8;"></div>
+            <p style="font-size:0.88rem;color:var(--text2);line-height:1.6;margin-bottom:4px;">Los nuevos ratios se guardarán para todas las ventas nuevas.<br>Indica desde qué fecha quieres <strong>recalcular también los registros ya existentes</strong>.</p>
+            <div class="form-group"><label>Aplicar desde la fecha *</label><input type="date" id="aplicarDesde"></div>
+            <div id="aplicarPreview" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:0.82rem;color:var(--text3);display:none;line-height:1.8;"></div>
             <div style="display:flex;gap:8px;margin-top:4px;">
                 <button class="btn btn-ghost" style="flex:1;" onclick="cerrarModal('modalAplicarRatios')">Cancelar</button>
                 <button class="btn btn-primary" style="flex:2;" onclick="confirmarAplicarRatios()">✅ Confirmar y aplicar</button>
@@ -673,13 +250,9 @@
     </div>
 </div>
 
-<!-- MODAL EDICIÓN -->
 <div id="modalEdit" class="modal">
     <div class="modal-box">
-        <div class="modal-header">
-            <div class="modal-title">Editar venta</div>
-            <button class="modal-close" onclick="cerrarModal('modalEdit')">✕</button>
-        </div>
+        <div class="modal-header"><div class="modal-title">Editar venta</div><button class="modal-close" onclick="cerrarModal('modalEdit')">✕</button></div>
         <div class="modal-form">
             <input type="hidden" id="editId">
             <div class="form-group"><label>Póliza</label><input type="text" id="editPoliza"></div>
@@ -694,772 +267,433 @@
 
 <div id="toast" class="toast"></div>
 
-<!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
 <script>
-// ================== SEGUROS BASE ==================
-const SEGUROS_BASE = {
-    "decesos_pp_evoluciona": { nombre: "Decesos PP - Evoluciona", categoria: "decesos", tieneNiveles: true, niveles: { "1-1.99": {valor:200,puntos:100}, "2-2.99":{valor:300,puntos:150}, "3-3.99":{valor:350,puntos:200}, "4-5":{valor:400,puntos:250} }},
-    "af_plus":              { nombre: "Asistencia Familiar Plus",             categoria: "decesos", valor: 375,   puntos: 375 },
-    "af_esencial":          { nombre: "Asistencia Familiar Esencial",         categoria: "decesos", valor: 175,   puntos: 175 },
-    "af_iplus":             { nombre: "Asistencia Familiar iPlus",            categoria: "decesos", valor: 400,   puntos: 400 },
-    "af_iplus_sanitas":     { nombre: "Asistencia Familiar iPlus Sanitas",    categoria: "decesos", valor: 225,   puntos: 225 },
-    "hogar_eficaz":         { nombre: "Hogar Eficaz",                         categoria: "hogar",   valor: 75,    puntos: 75  },
-    "hogar_plus":           { nombre: "Hogar Plus",                           categoria: "hogar",   valor: 125,   puntos: 125 },
-    "hogar_completo":       { nombre: "Hogar Completo",                       categoria: "hogar",   valor: 170,   puntos: 170 },
-    "hogar_premium":        { nombre: "Hogar Premium",                        categoria: "hogar",   valor: 200,   puntos: 200 },
-    "vida_tar":             { nombre: "Vida Riesgo (TAR)",                    categoria: "vida",    valor: 250,   puntos: 250 },
-    "vida_temporal":        { nombre: "Vida Riesgo Temporal",                 categoria: "vida",    valor: 30,    puntos: 30  },
-    "vida_temporal_svp":    { nombre: "Vida Riesgo Temporal - SVP",           categoria: "vida",    valor: 110,   puntos: 110 },
-    "decesos_pu":           { nombre: "Decesos y Asistencia (P. Única)",      categoria: "decesos", valor: 75,    puntos: 75  },
-    "salud":                { nombre: "Salud",                                categoria: "salud",   valor: 75,    puntos: 75  },
-    "accidentes":           { nombre: "Accidentes",                           categoria: "otros",   valor: 75,    puntos: 75  },
-    "empresas":             { nombre: "Empresas",                             categoria: "otros",   valor: 60,    puntos: 60  },
-    "mascotas":             { nombre: "Mascotas",                             categoria: "otros",   valor: 82.63, puntos: 82.63 },
-    "autos":                { nombre: "Autos",                                categoria: "otros",   valor: 50,    puntos: 50  },
-    "accidentes_individual":{ nombre: "Accidentes Individual",                categoria: "otros",   valor: 100,   puntos: 75  },
-    "temporal_renovable":   { nombre: "Temporal Renovable",                   categoria: "vida",    valor: 180,   puntos: 250 },
-    "asistencia_global":    { nombre: "Asistencia Global",                    categoria: "decesos", valor: 200,   puntos: 375 },
-    "salud_profesionales":  { nombre: "Salud Profesionales",                  categoria: "salud",   valor: 50,    puntos: 75  },
-    "salud_santalucia":     { nombre: "Salud Primero Santalucía",             categoria: "salud",   valor: 50,    puntos: 75  },
-    "dental_anual":         { nombre: "Salud Dental (anual)",                 categoria: "salud",   valor: 130,   puntos: 0   },
-    "animales":             { nombre: "Animales de Compañía",                 categoria: "otros",   valor: 75,    puntos: 20  },
-    "responsabilidad_civil":{ nombre: "Responsabilidad Civil",                categoria: "otros",   valor: 50,    puntos: 0   }
+const SEGUROS_BASE={
+    "decesos_pp_evoluciona":{nombre:"Decesos PP - Evoluciona",categoria:"decesos",tieneNiveles:true,niveles:{"1-1.99":{valor:200,puntos:100},"2-2.99":{valor:300,puntos:150},"3-3.99":{valor:350,puntos:200},"4-5":{valor:400,puntos:250}}},
+    "af_plus":{nombre:"Asistencia Familiar Plus",categoria:"decesos",valor:375,puntos:375},
+    "af_esencial":{nombre:"Asistencia Familiar Esencial",categoria:"decesos",valor:175,puntos:175},
+    "af_iplus":{nombre:"Asistencia Familiar iPlus",categoria:"decesos",valor:400,puntos:400},
+    "af_iplus_sanitas":{nombre:"Asistencia Familiar iPlus Sanitas",categoria:"decesos",valor:225,puntos:225},
+    "hogar_eficaz":{nombre:"Hogar Eficaz",categoria:"hogar",valor:75,puntos:75},
+    "hogar_plus":{nombre:"Hogar Plus",categoria:"hogar",valor:125,puntos:125},
+    "hogar_completo":{nombre:"Hogar Completo",categoria:"hogar",valor:170,puntos:170},
+    "hogar_premium":{nombre:"Hogar Premium",categoria:"hogar",valor:200,puntos:200},
+    "vida_tar":{nombre:"Vida Riesgo (TAR)",categoria:"vida",valor:250,puntos:250},
+    "vida_temporal":{nombre:"Vida Riesgo Temporal",categoria:"vida",valor:30,puntos:30},
+    "vida_temporal_svp":{nombre:"Vida Riesgo Temporal - SVP",categoria:"vida",valor:110,puntos:110},
+    "temporal_renovable":{nombre:"Temporal Renovable",categoria:"vida",valor:180,puntos:250},
+    "decesos_pu":{nombre:"Decesos y Asistencia (P. Única)",categoria:"decesos",valor:75,puntos:75},
+    "asistencia_global":{nombre:"Asistencia Global",categoria:"decesos",valor:200,puntos:375},
+    "salud":{nombre:"Salud",categoria:"salud",valor:75,puntos:75},
+    "salud_profesionales":{nombre:"Salud Profesionales",categoria:"salud",valor:50,puntos:75},
+    "salud_santalucia":{nombre:"Salud Primero Santalucía",categoria:"salud",valor:50,puntos:75},
+    "dental_anual":{nombre:"Salud Dental (anual)",categoria:"salud",valor:130,puntos:0},
+    "accidentes":{nombre:"Accidentes",categoria:"otros",valor:75,puntos:75},
+    "accidentes_individual":{nombre:"Accidentes Individual",categoria:"otros",valor:100,puntos:75},
+    "empresas":{nombre:"Empresas",categoria:"otros",valor:60,puntos:60},
+    "mascotas":{nombre:"Mascotas",categoria:"otros",valor:82.63,puntos:82.63},
+    "animales":{nombre:"Animales de Compañía",categoria:"otros",valor:75,puntos:20},
+    "autos":{nombre:"Autos",categoria:"otros",valor:50,puntos:50},
+    "responsabilidad_civil":{nombre:"Responsabilidad Civil",categoria:"otros",valor:50,puntos:0}
 };
 
-let ventas = [];
-let cierres = [];
-let seguros = {};
-let _mesContableManual = false;
-let _userId = null;
+let ventas=[],cierres=[],seguros={},usuarioId=null,_mesContableManual=false;
 
-// ================== MAPEO DE CAMPOS (app ↔ Supabase) ==================
-// Supabase usa snake_case; la app usa camelCase internamente
-
-function fromDB(v) {
-    return {
-        id:          String(v.id || ''),
-        fecha:       v.fecha,
-        poliza:      v.poliza,
-        cliente:     v.cliente,
-        tipoNombre:  v.tipo_nombre,
-        categoria:   v.categoria,
-        precio:      parseFloat(v.precio)  || 0,
-        valor:       parseFloat(v.valor)   || 0,
-        puntos:      parseFloat(v.puntos)  || 0,
-        mes:         String(v.mes || '').slice(0, 7),
-        mesContable: String(v.mes_contable || v.mes || '').slice(0, 7),
-        movida:      !!v.movida,
-        notaMovida:  v.nota_movida || ''
-    };
+function fromSupabase(v){
+    return{id:String(v.id||''),fecha:String(v.fecha||'').slice(0,10),poliza:v.poliza||'',cliente:v.cliente||'',
+        tipoNombre:v.tipo_nombre||'',categoria:v.categoria||'',precio:parseFloat(v.precio)||0,
+        valor:parseFloat(v.valor)||0,puntos:parseFloat(v.puntos)||0,mes:String(v.mes||'').slice(0,7),
+        mesContable:String(v.mes_contable||v.mes||'').slice(0,7),movida:!!v.movida,notaMovida:v.nota_movida||''};
 }
 
-function toDB(v) {
-    return {
-        id:            v.id,
-        usuario_id:    _userId,
-        fecha:         v.fecha,
-        poliza:        v.poliza,
-        cliente:       v.cliente,
-        tipo_nombre:   v.tipoNombre,
-        categoria:     v.categoria,
-        precio:        v.precio,
-        valor:         v.valor,
-        puntos:        v.puntos,
-        mes:           v.mes,
-        mes_contable:  v.mesContable,
-        movida:        v.movida,
-        nota_movida:   v.notaMovida || ''
-    };
+function toSupabase(v){
+    return{usuario_id:usuarioId,fecha:v.fecha,poliza:v.poliza,cliente:v.cliente,tipo_nombre:v.tipoNombre,
+        categoria:v.categoria,precio:v.precio,valor:v.valor,puntos:v.puntos,mes:v.mes,
+        mes_contable:v.mesContable,movida:v.movida,nota_movida:v.notaMovida||''};
 }
 
-// ================== INIT ==================
-async function init() {
-    // Verificar sesión
-    const { data: { session } } = await db.auth.getSession();
-    if (!session) {
-        window.location.href = 'index.html';
-        return;
-    }
-    _userId = session.user.id;
-
-    // Cargar configuración de seguros
-    const saved = localStorage.getItem('segurosConfig');
-    seguros = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(SEGUROS_BASE));
-
-    const hoy = new Date().toISOString().slice(0, 7);
-    document.getElementById('filtroMes').value   = hoy;
-    document.getElementById('resumenMes').value  = hoy;
-    document.getElementById('fechaEfecto').valueAsDate = new Date();
-    document.getElementById('mesContable').value = hoy;
-
-    buildSelectSeguros();
-    mostrarConfig();
-    cargarCierresLocal();
-
+async function init(){
+    const{data:{session}}=await db.auth.getSession();
+    if(!session){window.location.href='index.html';return;}
+    usuarioId=session.user.id;
+    const saved=localStorage.getItem('segurosConfig');
+    seguros=saved?JSON.parse(saved):JSON.parse(JSON.stringify(SEGUROS_BASE));
+    const hoy=new Date().toISOString().slice(0,7);
+    document.getElementById('filtroMes').value=hoy;
+    document.getElementById('resumenMes').value=hoy;
+    document.getElementById('fechaEfecto').valueAsDate=new Date();
+    document.getElementById('mesContable').value=hoy;
+    buildSelectSeguros();mostrarConfig();
     setSyncing(true);
-    try {
-        await cargarVentas();
-        console.log(`✅ Cargadas ${ventas.length} ventas desde Supabase`);
-    } catch(e) {
-        console.error('Error al cargar:', e);
-        toast('Error al conectar con la base de datos. Prueba recargar la página.', 'error');
-    }
+    try{await Promise.all([cargarVentas(),cargarCierres()]);}
+    catch(e){console.error('Error al cargar:',e);toast('Error al conectar con la base de datos. Prueba recargar.','error');}
     setSyncing(false);
 }
 
-// ================== SUPABASE: VENTAS ==================
-async function cargarVentas() {
-    const { data, error } = await db
-        .from('ventas')
-        .select('*')
-        .eq('usuario_id', _userId)
-        .order('fecha', { ascending: false });
+async function logout(){await db.auth.signOut();localStorage.removeItem('perfil');window.location.href='index.html';}
 
-    if (error) throw error;
-
-    ventas = (data || []).map(fromDB).filter(v => v.id);
-    renderTabla();
-    renderStats();
-    renderTrimestres();
-    renderResumen();
+async function cargarVentas(){
+    const{data,error}=await db.from('ventas').select('*').eq('usuario_id',usuarioId).order('fecha',{ascending:false});
+    if(error)throw error;
+    ventas=(data||[]).map(fromSupabase).filter(v=>v.id);
+    renderTabla();renderStats();renderTrimestres();renderResumen();
 }
 
-async function guardarVenta() {
-    const tipo       = document.getElementById('tipoSeguro').value;
-    const poliza     = document.getElementById('numeroPoliza').value.trim();
-    const precio     = parseFloat(document.getElementById('precioTarifa').value);
-    const fecha      = document.getElementById('fechaEfecto').value;
-    const cliente    = document.getElementById('nombreCliente').value.trim() || 'Sin nombre';
-    const nivel      = document.getElementById('nivelSeguro').value;
-    const mesContable= document.getElementById('mesContable').value;
-    const notaMovida = document.getElementById('notaMovida').value.trim();
-
-    if (!tipo || !poliza || !precio || !fecha) {
-        toast('Completa los campos obligatorios (*)', 'error');
-        return;
-    }
-
-    const seg = seguros[tipo];
-    let rv = seg.valor || 0;
-    let rp = seg.puntos || 0;
-    if (seg.tieneNiveles && nivel && seg.niveles?.[nivel]) {
-        rv = seg.niveles[nivel].valor;
-        rp = seg.niveles[nivel].puntos;
-    }
-
-    const mesFecha = fecha.slice(0, 7);
-    const movida   = mesContable !== mesFecha;
-
-    const venta = {
-        id:          crypto.randomUUID(),
-        fecha,       poliza, cliente,
-        tipoNombre:  seg.nombre + (nivel ? ` (${nivel})` : ''),
-        categoria:   seg.categoria,
-        precio,
-        valor:       parseFloat((precio * rv / 100).toFixed(2)),
-        puntos:      parseFloat((precio * rp / 100).toFixed(2)),
-        mes:         mesFecha,
-        mesContable: mesContable || mesFecha,
-        movida,
-        notaMovida:  movida ? notaMovida : ''
-    };
-
-    setSyncing(true);
-    const { error } = await db.from('ventas').insert([toDB(venta)]);
-    if (error) {
-        console.error(error);
-        toast('Error al guardar en la base de datos', 'error');
-    } else {
-        ventas.unshift(venta);
-        renderTabla(); renderStats(); renderTrimestres(); renderResumen();
-        limpiarForm();
-        toast('Venta guardada correctamente ✓', 'success');
-    }
-    setSyncing(false);
-}
-
-async function eliminarVenta(id) {
-    if (!confirm('¿Eliminar esta venta?')) return;
-    setSyncing(true);
-    const { error } = await db.from('ventas').delete().eq('id', id);
-    if (error) {
-        toast('Error al eliminar', 'error');
-    } else {
-        ventas = ventas.filter(v => v.id !== id);
-        renderTabla(); renderStats(); renderTrimestres(); renderResumen();
-        toast('Venta eliminada', 'success');
-    }
-    setSyncing(false);
-}
-
-async function guardarEdicion() {
-    const id         = document.getElementById('editId').value;
-    const v          = ventas.find(v => v.id === id);
-    if (!v) return;
-
-    const nuevoPrecio = parseFloat(document.getElementById('editTarifa').value);
-    const nuevoMes    = document.getElementById('editMesContable').value;
-    const nuevaNota   = document.getElementById('editNota').value.trim();
-    const seg         = seguros[v.tipo] || {};
-    const rv          = seg.valor  || 0;
-    const rp          = seg.puntos || 0;
-
-    const updated = {
-        ...v,
-        poliza:      document.getElementById('editPoliza').value,
-        cliente:     document.getElementById('editCliente').value,
-        precio:      nuevoPrecio,
-        valor:       parseFloat((nuevoPrecio * rv / 100).toFixed(2)),
-        puntos:      parseFloat((nuevoPrecio * rp / 100).toFixed(2)),
-        mesContable: nuevoMes,
-        movida:      nuevoMes !== (v.mes || v.fecha?.slice(0, 7)),
-        notaMovida:  nuevaNota
-    };
-
-    setSyncing(true);
-    const { error } = await db.from('ventas').update(toDB(updated)).eq('id', id);
-    if (error) {
-        toast('Error al guardar los cambios', 'error');
-    } else {
-        const idx = ventas.findIndex(v => v.id === id);
-        ventas[idx] = updated;
-        renderTabla(); renderStats(); renderTrimestres(); renderResumen();
-        cerrarModal('modalEdit');
-        toast('Cambios guardados ✓', 'success');
-    }
-    setSyncing(false);
-}
-
-// ================== CIERRES (localStorage) ==================
-const CIERRES_KEY = 'cierres2026';
-
-function cargarCierresLocal() {
-    const saved = localStorage.getItem(CIERRES_KEY);
-    if (saved) {
-        cierres = JSON.parse(saved);
-    } else {
-        // Meses de 2026 por defecto
-        const meses = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06',
-                        '2026-07','2026-08','2026-09','2026-10','2026-11','2026-12'];
-        cierres = meses.map(m => ({ mes: m, fechaCierre: '', fechaLiquidacion: '' }));
-    }
+async function cargarCierres(){
+    const{data,error}=await db.from('cierres').select('*').eq('usuario_id',usuarioId).order('mes',{ascending:true});
+    if(error){console.warn('Sin tabla cierres:',error.message);cierres=[];}
+    else cierres=data||[];
     renderCierres();
 }
 
-function guardarCierres() {
-    localStorage.setItem(CIERRES_KEY, JSON.stringify(cierres));
-    toast('Cierres guardados correctamente ✓', 'success');
+async function guardarVenta(){
+    const tipo=document.getElementById('tipoSeguro').value;
+    const poliza=document.getElementById('numeroPoliza').value.trim();
+    const precio=parseFloat(document.getElementById('precioTarifa').value);
+    const fecha=document.getElementById('fechaEfecto').value;
+    const cliente=document.getElementById('nombreCliente').value.trim()||'Sin nombre';
+    const nivel=document.getElementById('nivelSeguro').value;
+    const mesContable=document.getElementById('mesContable').value;
+    const notaMovida=document.getElementById('notaMovida').value.trim();
+    if(!tipo||!poliza||!precio||!fecha){toast('Completa los campos obligatorios (*)','error');return;}
+    const seg=seguros[tipo];
+    let rv=seg.valor||0,rp=seg.puntos||0;
+    if(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel]){rv=seg.niveles[nivel].valor;rp=seg.niveles[nivel].puntos;}
+    const mesFecha=fecha.slice(0,7);
+    const movida=mesContable!==mesFecha;
+    const venta={id:String(Date.now()),fecha,poliza,cliente,tipoNombre:seg.nombre+(nivel?` (${nivel})`:''),
+        categoria:seg.categoria,precio,valor:parseFloat((precio*rv/100).toFixed(2)),
+        puntos:parseFloat((precio*rp/100).toFixed(2)),mes:mesFecha,mesContable:mesContable||mesFecha,
+        movida,notaMovida:movida?notaMovida:''};
+    setSyncing(true);
+    const{data,error}=await db.from('ventas').insert([toSupabase(venta)]).select().single();
+    if(error){console.error(error);toast('Error al guardar la venta','error');setSyncing(false);return;}
+    venta.id=String(data.id);
+    ventas.unshift(venta);
+    renderTabla();renderStats();renderTrimestres();renderResumen();limpiarForm();
+    toast('Venta guardada correctamente ✓','success');setSyncing(false);
 }
 
-// ================== AUTH ==================
-async function logout() {
-    await db.auth.signOut();
-    localStorage.removeItem('perfil');
-    window.location.href = 'index.html';
+async function eliminarVenta(id){
+    if(!confirm('¿Eliminar esta venta?'))return;
+    setSyncing(true);
+    const{error}=await db.from('ventas').delete().eq('id',id);
+    if(error){toast('Error al eliminar','error');setSyncing(false);return;}
+    ventas=ventas.filter(v=>v.id!==id);
+    renderTabla();renderTrimestres();renderResumen();renderStats();
+    toast('Venta eliminada','success');setSyncing(false);
 }
 
-// ================== UI ==================
-function setSyncing(v) {
-    document.getElementById('syncDot').className = 'sync-dot' + (v ? ' syncing' : '');
-    document.getElementById('syncText').textContent = v ? 'Sincronizando...' : 'Conectado';
-}
-
-function abrirEdicion(id) {
-    const v = ventas.find(v => v.id === id);
-    if (!v) return;
-    document.getElementById('editId').value          = id;
-    document.getElementById('editPoliza').value      = v.poliza;
-    document.getElementById('editCliente').value     = v.cliente;
-    document.getElementById('editTarifa').value      = v.precio;
-    document.getElementById('editMesContable').value = v.mesContable || v.mes;
-    document.getElementById('editNota').value        = v.notaMovida || '';
+function abrirEdicion(id){
+    const v=ventas.find(v=>v.id===id);if(!v)return;
+    document.getElementById('editId').value=id;
+    document.getElementById('editPoliza').value=v.poliza;
+    document.getElementById('editCliente').value=v.cliente;
+    document.getElementById('editTarifa').value=v.precio;
+    document.getElementById('editMesContable').value=v.mesContable||v.mes;
+    document.getElementById('editNota').value=v.notaMovida||'';
     document.getElementById('modalEdit').classList.add('open');
 }
 
-function onTipoChange() {
-    const tipo     = document.getElementById('tipoSeguro').value;
-    const nivelSel = document.getElementById('nivelSeguro');
-    nivelSel.innerHTML = '<option value="">—</option>';
-    if (tipo && seguros[tipo]?.tieneNiveles) {
-        nivelSel.disabled = false;
-        for (let n in seguros[tipo].niveles) {
-            nivelSel.innerHTML += `<option value="${n}">${n}</option>`;
-        }
-    } else {
-        nivelSel.disabled = true;
+async function guardarEdicion(){
+    const id=document.getElementById('editId').value;
+    const v=ventas.find(v=>v.id===id);if(!v)return;
+    const nuevoPrecio=parseFloat(document.getElementById('editTarifa').value);
+    const nuevoMes=document.getElementById('editMesContable').value;
+    const nuevaNota=document.getElementById('editNota').value.trim();
+    const match=encontrarSeguroPorNombre(v.tipoNombre);
+    let nv=v.valor,np=v.puntos;
+    if(match){
+        const{seg,nivel}=match;
+        const rv=(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel])?seg.niveles[nivel].valor:(seg.valor||0);
+        const rp=(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel])?seg.niveles[nivel].puntos:(seg.puntos||0);
+        nv=parseFloat((nuevoPrecio*rv/100).toFixed(2));np=parseFloat((nuevoPrecio*rp/100).toFixed(2));
     }
+    const updated={...v,poliza:document.getElementById('editPoliza').value,cliente:document.getElementById('editCliente').value,
+        precio:nuevoPrecio,valor:nv,puntos:np,mesContable:nuevoMes,
+        movida:nuevoMes!==(v.mes||v.fecha?.slice(0,7)),notaMovida:nuevaNota};
+    setSyncing(true);
+    const{error}=await db.from('ventas').update(toSupabase(updated)).eq('id',id);
+    if(error){toast('Error al guardar','error');setSyncing(false);return;}
+    const idx=ventas.findIndex(v=>v.id===id);ventas[idx]=updated;
+    renderTabla();renderTrimestres();renderResumen();renderStats();
+    cerrarModal('modalEdit');toast('Cambios guardados ✓','success');setSyncing(false);
+}
+
+function renderCierres(){
+    const c=document.getElementById('listaCierres');
+    if(!cierres.length){c.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3);">No hay cierres registrados</div>';return;}
+    const f=cierres.map((x,i)=>`<div class="cierre-row">
+        <span class="cierre-label">${String(x.mes||'').slice(0,7)||'—'}</span>
+        <div><label style="font-size:0.68rem;color:var(--text3);display:block;margin-bottom:3px;">Cierre</label><input class="cierre-input" type="date" value="${x.fecha_cierre?String(x.fecha_cierre).slice(0,10):''}" onchange="onCierreChange(${i},'fecha_cierre',this.value)"></div>
+        <div><label style="font-size:0.68rem;color:var(--text3);display:block;margin-bottom:3px;">Liquidación</label><input class="cierre-input" type="date" value="${x.fecha_liquidacion?String(x.fecha_liquidacion).slice(0,10):''}" onchange="onCierreChange(${i},'fecha_liquidacion',this.value)"></div>
+    </div>`).join('');
+    c.innerHTML=`<div class="cierre-row" style="font-weight:700;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);"><span>Mes</span><span>Fecha de cierre</span><span>Fecha de liquidación</span></div>${f}`;
+}
+function onCierreChange(i,f,v){if(cierres[i])cierres[i][f]=v;}
+async function guardarCierres(){
+    setSyncing(true);
+    const{error}=await db.from('cierres').upsert(cierres.map(c=>({...c,usuario_id:usuarioId})));
+    toast(error?'Error al guardar los cierres':'Cierres guardados correctamente ✓',error?'error':'success');setSyncing(false);
+}
+
+function setSyncing(v){document.getElementById('syncDot').className='sync-dot'+(v?' syncing':'');document.getElementById('syncText').textContent=v?'Sincronizando...':'Conectado';}
+
+function onTipoChange(){
+    const tipo=document.getElementById('tipoSeguro').value;
+    const ns=document.getElementById('nivelSeguro');
+    ns.innerHTML='<option value="">—</option>';
+    if(tipo&&seguros[tipo]?.tieneNiveles){ns.disabled=false;for(let n in seguros[tipo].niveles)ns.innerHTML+=`<option value="${n}">${n}</option>`;}
+    else ns.disabled=true;
     calcular();
 }
 
-function calcular() {
-    const tipo   = document.getElementById('tipoSeguro').value;
-    const precio = parseFloat(document.getElementById('precioTarifa').value) || 0;
-    const nivel  = document.getElementById('nivelSeguro').value;
-    if (!tipo || !seguros[tipo]) {
-        document.getElementById('valorCalculado').value  = '';
-        document.getElementById('puntosCalculados').value = '';
-        return;
-    }
-    const seg = seguros[tipo];
-    let rv, rp;
-    if (seg.tieneNiveles && nivel) { rv = seg.niveles[nivel].valor; rp = seg.niveles[nivel].puntos; }
-    else { rv = seg.valor; rp = seg.puntos; }
-    document.getElementById('valorCalculado').value   = (precio * rv / 100).toFixed(2);
-    document.getElementById('puntosCalculados').value = (precio * rp / 100).toFixed(2);
+function calcular(){
+    const tipo=document.getElementById('tipoSeguro').value;
+    const precio=parseFloat(document.getElementById('precioTarifa').value)||0;
+    const nivel=document.getElementById('nivelSeguro').value;
+    if(!tipo||!seguros[tipo]){document.getElementById('valorCalculado').value='';document.getElementById('puntosCalculados').value='';return;}
+    const seg=seguros[tipo];let rv,rp;
+    if(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel]){rv=seg.niveles[nivel].valor;rp=seg.niveles[nivel].puntos;}
+    else{rv=seg.valor;rp=seg.puntos;}
+    document.getElementById('valorCalculado').value=(precio*rv/100).toFixed(2);
+    document.getElementById('puntosCalculados').value=(precio*rp/100).toFixed(2);
     calcularMesContable();
 }
 
-function calcularMesContable() {
-    if (_mesContableManual) return;
-    const fecha = document.getElementById('fechaEfecto').value;
-    if (!fecha) return;
-    const mesBase = fecha.slice(0, 7);
-    document.getElementById('mesContable').value = mesBase;
-    document.getElementById('grupoMovida').style.display = 'none';
+function calcularMesContable(){
+    if(_mesContableManual)return;
+    const f=document.getElementById('fechaEfecto').value;
+    if(!f)return;
+    document.getElementById('mesContable').value=f.slice(0,7);
+    document.getElementById('grupoMovida').style.display='none';
 }
 
-function renderTabla() {
-    const mesFiltro = document.getElementById('filtroMes').value;
-    const catFiltro = document.getElementById('filtroCategoria').value;
-    const tbody     = document.getElementById('tbodyVentas');
-    let lista = [...ventas];
-    if (mesFiltro) lista = lista.filter(v => (v.mesContable || v.mes) === mesFiltro);
-    if (catFiltro) lista = lista.filter(v => v.categoria === catFiltro);
-    lista.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-    if (!lista.length) {
-        tbody.innerHTML = '<tr><td colspan="9" class="empty-state">No hay ventas para este filtro</td></tr>';
-        return;
-    }
-    tbody.innerHTML = lista.map(v => `
-        <tr class="${v.movida ? 'movida' : ''}">
-            <td>${fmt(v.fecha)}</td>
-            <td style="font-family:'DM Mono',monospace;">${v.poliza}</td>
-            <td>${v.cliente}</td>
-            <td><span class="badge badge-${v.categoria}">${v.tipoNombre}</span>${v.movida ? '<span class="badge badge-moved">↕ movida</span>' : ''}</td>
-            <td>${(+v.precio).toFixed(2)}€</td>
-            <td style="color:var(--success);font-weight:600;">${(+v.valor).toFixed(2)}€</td>
-            <td style="color:var(--accent);font-weight:600;">${(+v.puntos).toFixed(2)}</td>
-            <td style="font-family:'DM Mono',monospace;color:${v.movida ? 'var(--moved)' : ''};">${v.mesContable || v.mes}</td>
-            <td>
-                <button class="btn btn-ghost btn-sm" onclick="abrirEdicion('${v.id}')">✏️</button>
-                <button class="btn btn-danger btn-sm" onclick="eliminarVenta('${v.id}')">🗑</button>
-            </td>
-        </tr>
-    `).join('');
+function renderTabla(){
+    const mf=document.getElementById('filtroMes').value,cf=document.getElementById('filtroCategoria').value;
+    const tbody=document.getElementById('tbodyVentas');
+    let lista=[...ventas];
+    if(mf)lista=lista.filter(v=>(v.mesContable||v.mes)===mf);
+    if(cf)lista=lista.filter(v=>v.categoria===cf);
+    lista.sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+    if(!lista.length){tbody.innerHTML='<tr><td colspan="9" class="empty-state">No hay ventas para este filtro</td></tr>';return;}
+    tbody.innerHTML=lista.map(v=>`<tr class="${v.movida?'movida':''}">
+        <td>${fmt(v.fecha)}</td><td style="font-family:'DM Mono',monospace;">${v.poliza}</td><td>${v.cliente}</td>
+        <td><span class="badge badge-${v.categoria}">${v.tipoNombre}</span>${v.movida?'<span class="badge badge-moved">↕ movida</span>':''}</td>
+        <td>${(+v.precio).toFixed(2)}€</td><td style="color:var(--success);font-weight:600;">${(+v.valor).toFixed(2)}€</td>
+        <td style="color:var(--accent);font-weight:600;">${(+v.puntos).toFixed(2)}</td>
+        <td style="font-family:'DM Mono',monospace;color:${v.movida?'var(--moved)':''};">${v.mesContable||v.mes}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="abrirEdicion('${v.id}')">✏️</button> <button class="btn btn-danger btn-sm" onclick="eliminarVenta('${v.id}')">🗑</button></td>
+    </tr>`).join('');
 }
 
-function renderStats() {
-    const totalValor  = ventas.reduce((s, v) => s + (+v.valor), 0);
-    const totalPuntos = ventas.reduce((s, v) => s + (+v.puntos), 0);
-    const hoy         = new Date().toISOString().slice(0, 7);
-    const estesMes    = ventas.filter(v => (v.mesContable || v.mes) === hoy).length;
-    document.getElementById('st-ventas').textContent = ventas.length;
-    document.getElementById('st-valor').textContent  = totalValor.toFixed(2) + '€';
-    document.getElementById('st-puntos').textContent = totalPuntos.toFixed(0);
-    document.getElementById('st-mes').textContent    = estesMes;
+function renderStats(){
+    const totalImporte = ventas.reduce((s,v)=>s+(+v.precio),0);
+    const totalValor   = ventas.reduce((s,v)=>s+(+v.valor),0);
+    const totalPuntos  = ventas.reduce((s,v)=>s+(+v.puntos),0);
+    const hoy          = new Date().toISOString().slice(0,7);
+    const mesMes       = ventas.filter(v=>(v.mesContable||v.mes)===hoy);
+    const mesImporte   = mesMes.reduce((s,v)=>s+(+v.precio),0);
+    const mesValor     = mesMes.reduce((s,v)=>s+(+v.valor),0);
+    const mesPuntos    = mesMes.reduce((s,v)=>s+(+v.puntos),0);
+    const nombresMes   = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const [anio, mes]  = hoy.split('-');
+
+    document.getElementById('st-ventas').textContent  = ventas.length;
+    document.getElementById('st-importe').textContent = totalImporte.toFixed(2)+'€';
+    document.getElementById('st-valor').textContent   = totalValor.toFixed(2)+'€';
+    document.getElementById('st-puntos').textContent  = totalPuntos.toFixed(0);
+
+    document.getElementById('st-mes-titulo').textContent  = nombresMes[parseInt(mes)-1]+' '+anio;
+    document.getElementById('st-mes-ventas').textContent  = mesMes.length;
+    document.getElementById('st-mes-importe').textContent = mesImporte.toFixed(2)+'€';
+    document.getElementById('st-mes-valor').textContent   = mesValor.toFixed(2)+'€';
+    document.getElementById('st-mes-puntos').textContent  = mesPuntos.toFixed(0);
 }
 
-function renderTrimestres() {
-    const anio   = parseInt(document.getElementById('trimestreAnio').value);
-    const MESES  = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    const trimDef = [
-        { nombre: 'T1', etiqueta: 'Dic · Ene · Feb', meses: [`${anio-1}-12`, `${anio}-01`, `${anio}-02`] },
-        { nombre: 'T2', etiqueta: 'Mar · Abr · May', meses: [`${anio}-03`, `${anio}-04`, `${anio}-05`] },
-        { nombre: 'T3', etiqueta: 'Jun · Jul · Ago', meses: [`${anio}-06`, `${anio}-07`, `${anio}-08`] },
-        { nombre: 'T4', etiqueta: 'Sep · Oct · Nov', meses: [`${anio}-09`, `${anio}-10`, `${anio}-11`] },
-    ];
-    document.getElementById('trimestreGrid').innerHTML = trimDef.map(t => {
-        const ventasTrim  = ventas.filter(v => t.meses.includes(v.mesContable || v.mes));
-        const totalValor  = ventasTrim.reduce((s, v) => s + (+v.valor), 0);
-        const totalPuntos = ventasTrim.reduce((s, v) => s + (+v.puntos), 0);
-        const filasMes = t.meses.map(m => {
-            const mv  = ventas.filter(v => (v.mesContable || v.mes) === m);
-            const pts = mv.reduce((s, v) => s + (+v.puntos), 0);
-            const val = mv.reduce((s, v) => s + (+v.valor), 0);
-            const [yy, mm] = m.split('-');
-            const etiq = MESES[parseInt(mm) - 1] + ' ' + yy;
-            return `<div style="display:flex;justify-content:space-between;align-items:center;
-                        padding:8px 0;border-bottom:1px solid var(--border);font-size:0.82rem;">
-                <span style="color:var(--text2);min-width:70px;">${etiq}</span>
-                <span style="color:var(--text3);">${mv.length} venta${mv.length !== 1 ? 's' : ''}</span>
-                <span style="color:var(--success);">${val.toFixed(2)} €</span>
-                <span style="color:var(--accent);font-family:'DM Mono',monospace;">${pts.toFixed(2)} pts</span>
-            </div>`;
-        }).join('');
-        return `<div class="card">
-            <div class="card-title">${t.nombre} &nbsp;·&nbsp; ${t.etiqueta}</div>
-            ${filasMes}
+function renderTrimestres(){
+    const anio=parseInt(document.getElementById('trimestreAnio').value);
+    const M=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const td=[{n:'T1',e:'Dic · Ene · Feb',m:[`${anio-1}-12`,`${anio}-01`,`${anio}-02`]},{n:'T2',e:'Mar · Abr · May',m:[`${anio}-03`,`${anio}-04`,`${anio}-05`]},{n:'T3',e:'Jun · Jul · Ago',m:[`${anio}-06`,`${anio}-07`,`${anio}-08`]},{n:'T4',e:'Sep · Oct · Nov',m:[`${anio}-09`,`${anio}-10`,`${anio}-11`]}];
+    document.getElementById('trimestreGrid').innerHTML=td.map(t=>{
+        const vt=ventas.filter(v=>t.m.includes(v.mesContable||v.mes));
+        const ti=vt.reduce((s,v)=>s+(+v.precio),0),tv=vt.reduce((s,v)=>s+(+v.valor),0),tp=vt.reduce((s,v)=>s+(+v.puntos),0);
+        const fm=t.m.map(m=>{const mv=ventas.filter(v=>(v.mesContable||v.mes)===m);const[yy,mm]=m.split('-');
+            return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.82rem;">
+                <span style="color:var(--text2);min-width:70px;">${M[parseInt(mm)-1]} ${yy}</span>
+                <span style="color:var(--text3);">${mv.length} venta${mv.length!==1?'s':''}</span>
+                <span style="color:var(--text2);">${mv.reduce((s,v)=>s+(+v.precio),0).toFixed(2)} €</span>
+                <span style="color:var(--success);">${mv.reduce((s,v)=>s+(+v.valor),0).toFixed(2)} €</span>
+                <span style="color:var(--accent);font-family:'DM Mono',monospace;">${mv.reduce((s,v)=>s+(+v.puntos),0).toFixed(2)} pts</span>
+            </div>`;}).join('');
+        return`<div class="card"><div class="card-title">${t.n} &nbsp;·&nbsp; ${t.e}</div>${fm}
             <div style="display:flex;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
-                <div class="stat-card" style="flex:1;"><div class="stat-value">${ventasTrim.length}</div><div class="stat-label">Ventas</div></div>
-                <div class="stat-card" style="flex:1;"><div class="stat-value" style="color:var(--success);">${totalValor.toFixed(2)}€</div><div class="stat-label">Valor</div></div>
-                <div class="stat-card" style="flex:1;"><div class="stat-value">${totalPuntos.toFixed(2)}</div><div class="stat-label">Puntos</div></div>
-            </div>
-        </div>`;
-    }).join('');
+                <div class="stat-card" style="flex:1;"><div class="stat-value">${vt.length}</div><div class="stat-label">Ventas</div></div>
+                <div class="stat-card" style="flex:1;"><div class="stat-value" style="color:var(--text2);">${ti.toFixed(2)}€</div><div class="stat-label">Importe</div></div>
+                <div class="stat-card" style="flex:1;"><div class="stat-value" style="color:var(--success);">${tv.toFixed(2)}€</div><div class="stat-label">Valor</div></div>
+                <div class="stat-card" style="flex:1;"><div class="stat-value">${tp.toFixed(2)}</div><div class="stat-label">Puntos</div></div>
+            </div></div>`;}).join('');
 }
 
-function renderResumen() {
-    const mes   = document.getElementById('resumenMes').value;
-    const lista = ventas.filter(v => (v.mesContable || v.mes) === mes);
-    const totalValor  = lista.reduce((s, v) => s + (+v.valor), 0);
-    const totalPuntos = lista.reduce((s, v) => s + (+v.puntos), 0);
-    document.getElementById('res-ventas').textContent = lista.length;
-    document.getElementById('res-valor').textContent  = totalValor.toFixed(2) + '€';
-    document.getElementById('res-puntos').textContent = totalPuntos.toFixed(2);
-    document.getElementById('res-media').textContent  = lista.length ? (totalValor / lista.length).toFixed(2) + '€' : '0.00€';
-    const tbody = document.getElementById('tbodyResumen');
-    if (!lista.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No hay ventas para este mes</td></tr>';
-        return;
-    }
-    const grupos = {};
-    lista.forEach(v => {
-        const clave = v.tipoNombre || 'Sin tipo';
-        if (!grupos[clave]) grupos[clave] = { ventas: 0, valor: 0, puntos: 0, categoria: v.categoria };
-        grupos[clave].ventas++; grupos[clave].valor += +v.valor; grupos[clave].puntos += +v.puntos;
-    });
-    tbody.innerHTML = Object.entries(grupos)
-        .sort((a, b) => b[1].valor - a[1].valor)
-        .map(([tipo, g]) => `
-            <tr>
-                <td><span class="badge badge-${g.categoria}">${tipo}</span></td>
-                <td style="text-align:center;">${g.ventas}</td>
-                <td style="color:var(--success);">${g.valor.toFixed(2)} €</td>
-                <td style="color:var(--accent);">${g.puntos.toFixed(2)}</td>
-                <td style="color:var(--text3);">${totalValor ? ((g.valor / totalValor) * 100).toFixed(1) : 0}%</td>
-            </tr>`).join('');
+function renderResumen(){
+    const mes=document.getElementById('resumenMes').value,lista=ventas.filter(v=>(v.mesContable||v.mes)===mes);
+    const ti=lista.reduce((s,v)=>s+(+v.precio),0),tv=lista.reduce((s,v)=>s+(+v.valor),0),tp=lista.reduce((s,v)=>s+(+v.puntos),0);
+    document.getElementById('res-ventas').textContent=lista.length;
+    document.getElementById('res-importe').textContent=ti.toFixed(2)+'€';
+    document.getElementById('res-valor').textContent=tv.toFixed(2)+'€';
+    document.getElementById('res-puntos').textContent=tp.toFixed(2);
+    const tbody=document.getElementById('tbodyResumen');
+    if(!lista.length){tbody.innerHTML='<tr><td colspan="6" class="empty-state">No hay ventas para este mes</td></tr>';return;}
+    const g={};lista.forEach(v=>{const c=v.tipoNombre||'Sin tipo';if(!g[c])g[c]={ventas:0,importe:0,valor:0,puntos:0,categoria:v.categoria};g[c].ventas++;g[c].importe+=(+v.precio);g[c].valor+=(+v.valor);g[c].puntos+=(+v.puntos);});
+    tbody.innerHTML=Object.entries(g).sort((a,b)=>b[1].valor-a[1].valor).map(([t,x])=>`<tr>
+        <td><span class="badge badge-${x.categoria}">${t}</span></td>
+        <td style="text-align:center;">${x.ventas}</td>
+        <td style="color:var(--text2);">${x.importe.toFixed(2)} €</td>
+        <td style="color:var(--success);">${x.valor.toFixed(2)} €</td>
+        <td style="color:var(--accent);">${x.puntos.toFixed(2)}</td>
+        <td style="color:var(--text3);">${tv?((x.valor/tv)*100).toFixed(1):0}%</td>
+    </tr>`).join('');
 }
 
-function renderCierres() {
-    const container = document.getElementById('listaCierres');
-    if (!cierres.length) {
-        container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);">No hay cierres cargados</div>';
-        return;
-    }
-    const filas = cierres.map((c, i) => {
-        const mes          = String(c.mes || '').slice(0, 7);
-        const fechaCierre  = c.fechaCierre      ? String(c.fechaCierre).slice(0, 10) : '';
-        const fechaLiquidac= c.fechaLiquidacion ? String(c.fechaLiquidacion).slice(0, 10) : '';
-        return `<div class="cierre-row">
-            <span class="cierre-label">${mes || '—'}</span>
-            <div>
-                <label style="font-size:0.68rem;color:var(--text3);display:block;margin-bottom:3px;">Cierre</label>
-                <input class="cierre-input" type="date" value="${fechaCierre}"
-                    onchange="onCierreChange(${i},'fechaCierre',this.value)">
-            </div>
-            <div>
-                <label style="font-size:0.68rem;color:var(--text3);display:block;margin-bottom:3px;">Liquidación</label>
-                <input class="cierre-input" type="date" value="${fechaLiquidac}"
-                    onchange="onCierreChange(${i},'fechaLiquidacion',this.value)">
-            </div>
-        </div>`;
-    }).join('');
-    container.innerHTML =
-        `<div class="cierre-row" style="font-weight:700;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);">
-            <span>Mes</span><span>Fecha de cierre</span><span>Fecha de liquidación</span>
-        </div>${filas}`;
+function exportarCSV(){
+    const mf=document.getElementById('filtroMes').value,cf=document.getElementById('filtroCategoria').value;
+    let l=[...ventas];if(mf)l=l.filter(v=>(v.mesContable||v.mes)===mf);if(cf)l=l.filter(v=>v.categoria===cf);
+    l.sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+    const h=['Fecha','Póliza','Cliente','Tipo','Categoría','Tarifa €','Valor €','Puntos','Mes Contable','Movida','Nota'];
+    const r=l.map(v=>[v.fecha,v.poliza,v.cliente,v.tipoNombre,v.categoria,(+v.precio).toFixed(2),(+v.valor).toFixed(2),(+v.puntos).toFixed(0),v.mesContable||v.mes,v.movida?'Sí':'No',v.notaMovida||'']);
+    const csv=[h,...r].map(x=>x.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
+    a.download='ventas_seguros_'+(mf||'todas')+'.csv';a.click();
 }
 
-function onCierreChange(idx, campo, valor) {
-    if (cierres[idx]) cierres[idx][campo] = valor;
+function exportarTrimestresCSV(){
+    const anio=parseInt(document.getElementById('trimestreAnio').value);
+    const td=[{n:'T1',m:[(anio-1)+'-12',anio+'-01',anio+'-02']},{n:'T2',m:[anio+'-03',anio+'-04',anio+'-05']},{n:'T3',m:[anio+'-06',anio+'-07',anio+'-08']},{n:'T4',m:[anio+'-09',anio+'-10',anio+'-11']}];
+    const h=['Trimestre','Mes','Ventas','Valor €','Puntos'],r=[];
+    td.forEach(t=>t.m.forEach(m=>{const mv=ventas.filter(v=>(v.mesContable||v.mes)===m);r.push([t.n,m,mv.length,mv.reduce((s,v)=>s+(+v.valor),0).toFixed(2),mv.reduce((s,v)=>s+(+v.puntos),0).toFixed(0)]);}));
+    const csv=[h,...r].map(x=>x.map(c=>'"'+c+'"').join(',')).join('\n');
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
+    a.download='trimestres_seguros_'+anio+'.csv';a.click();
 }
 
-// ================== EXPORTAR CSV ==================
-function exportarCSV() {
-    const mesFiltro = document.getElementById('filtroMes').value;
-    const catFiltro = document.getElementById('filtroCategoria').value;
-    let lista = [...ventas];
-    if (mesFiltro) lista = lista.filter(v => (v.mesContable || v.mes) === mesFiltro);
-    if (catFiltro) lista = lista.filter(v => v.categoria === catFiltro);
-    lista.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-    const headers = ['Fecha','Póliza','Cliente','Tipo','Categoría','Tarifa €','Valor €','Puntos','Mes Contable','Movida','Nota'];
-    const rows = lista.map(v => [
-        v.fecha, v.poliza, v.cliente, v.tipoNombre, v.categoria,
-        (+v.precio).toFixed(2), (+v.valor).toFixed(2), (+v.puntos).toFixed(0),
-        v.mesContable || v.mes, v.movida ? 'Sí' : 'No', v.notaMovida || ''
-    ]);
-    const csv = [headers, ...rows].map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'ventas_seguros_' + (mesFiltro || 'todas') + '.csv';
-    a.click();
+function buildSelectSeguros(){
+    const sel=document.getElementById('tipoSeguro');sel.innerHTML='<option value="">Selecciona...</option>';
+    const cats={};for(let k in seguros){const s=seguros[k];if(!cats[s.categoria])cats[s.categoria]=[];cats[s.categoria].push({k,...s});}
+    const labels={decesos:'🛡️ Decesos',hogar:'🏠 Hogar',vida:'❤️ Vida',salud:'🏥 Salud',otros:'📋 Otros'};
+    for(let cat in cats){const og=document.createElement('optgroup');og.label=labels[cat]||cat;cats[cat].forEach(s=>{const o=document.createElement('option');o.value=s.k;o.textContent=s.nombre;og.appendChild(o);});sel.appendChild(og);}
 }
 
-function exportarTrimestresCSV() {
-    const anio = parseInt(document.getElementById('trimestreAnio').value);
-    const trimDef = [
-        { nombre: 'T1', meses: [`${anio-1}-12`, `${anio}-01`, `${anio}-02`] },
-        { nombre: 'T2', meses: [`${anio}-03`, `${anio}-04`, `${anio}-05`] },
-        { nombre: 'T3', meses: [`${anio}-06`, `${anio}-07`, `${anio}-08`] },
-        { nombre: 'T4', meses: [`${anio}-09`, `${anio}-10`, `${anio}-11`] },
-    ];
-    const headers = ['Trimestre','Mes','Ventas','Valor €','Puntos'];
-    const rows = [];
-    trimDef.forEach(t => {
-        t.meses.forEach(m => {
-            const mv = ventas.filter(v => (v.mesContable || v.mes) === m);
-            rows.push([t.nombre, m, mv.length,
-                mv.reduce((s, v) => s + (+v.valor), 0).toFixed(2),
-                mv.reduce((s, v) => s + (+v.puntos), 0).toFixed(0)]);
-        });
-    });
-    const csv = [headers, ...rows].map(r => r.map(c => '"' + c + '"').join(',')).join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'trimestres_seguros_' + anio + '.csv';
-    a.click();
+function mostrarConfig(){
+    const c=document.getElementById('listaConfig');
+    if(!Object.keys(seguros).length){c.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3);">No hay seguros configurados</div>';return;}
+    const cats={};for(let k in seguros){const s=seguros[k];if(!cats[s.categoria])cats[s.categoria]=[];cats[s.categoria].push({k,...s});}
+    const cl={decesos:'🛡️ Decesos',hogar:'🏠 Hogar',vida:'❤️ Vida',salud:'🏥 Salud',otros:'📋 Otros'};
+    c.innerHTML=Object.entries(cats).map(([cat,lista])=>`<div style="margin-bottom:18px;">
+        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);padding:8px 0 6px;border-bottom:1px solid var(--border);margin-bottom:4px;">${cl[cat]||cat}</div>
+        ${lista.map(s=>s.tieneNiveles
+            ?`<div style="padding:8px 0;border-bottom:1px solid var(--border);">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><strong style="font-size:0.88rem;">${s.nombre}</strong><span class="badge badge-${s.categoria}">niveles</span></div>
+                ${Object.entries(s.niveles||{}).map(([n,d])=>`<div style="display:grid;grid-template-columns:1fr 90px 90px 36px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(212,218,234,0.5);">
+                    <span style="font-size:0.82rem;color:var(--text2);padding-left:16px;">↳ Nivel ${n}</span>
+                    <div><label style="font-size:0.62rem;color:var(--text3);display:block;">Valor %</label><input type="number" step="0.01" value="${d.valor}" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--success);font-weight:600;font-size:0.82rem;" onchange="editarNivel('${s.k}','${n}','valor',this.value)"></div>
+                    <div><label style="font-size:0.62rem;color:var(--text3);display:block;">Puntos %</label><input type="number" step="0.01" value="${d.puntos}" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--accent);font-weight:600;font-size:0.82rem;" onchange="editarNivel('${s.k}','${n}','puntos',this.value)"></div>
+                    <div></div></div>`).join('')}
+              </div>`
+            :`<div style="display:grid;grid-template-columns:1fr 90px 90px 36px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+                <span style="font-size:0.88rem;font-weight:500;">${s.nombre}</span>
+                <div><label style="font-size:0.62rem;color:var(--text3);display:block;">Valor %</label><input type="number" step="0.01" value="${s.valor}" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--success);font-weight:600;font-size:0.82rem;" onchange="editarSeguro('${s.k}','valor',this.value)"></div>
+                <div><label style="font-size:0.62rem;color:var(--text3);display:block;">Puntos %</label><input type="number" step="0.01" value="${s.puntos}" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--accent);font-weight:600;font-size:0.82rem;" onchange="editarSeguro('${s.k}','puntos',this.value)"></div>
+                <button class="btn btn-danger btn-sm" onclick="eliminarSeguro('${s.k}')">🗑</button>
+              </div>`
+        ).join('')}</div>`).join('');
 }
 
-// ================== CONFIG DE SEGUROS ==================
-function buildSelectSeguros() {
-    const sel = document.getElementById('tipoSeguro');
-    sel.innerHTML = '<option value="">Selecciona...</option>';
-    const cats = {};
-    for (let k in seguros) {
-        const s = seguros[k];
-        if (!cats[s.categoria]) cats[s.categoria] = [];
-        cats[s.categoria].push({k, ...s});
-    }
-    const labels = {decesos:'🛡️ Decesos', hogar:'🏠 Hogar', vida:'❤️ Vida', salud:'🏥 Salud', otros:'📋 Otros'};
-    for (let cat in cats) {
-        const og = document.createElement('optgroup');
-        og.label = labels[cat] || cat;
-        cats[cat].forEach(s => {
-            const o = document.createElement('option');
-            o.value = s.k; o.textContent = s.nombre;
-            og.appendChild(o);
-        });
-        sel.appendChild(og);
-    }
+function editarSeguro(c,f,v){if(seguros[c]){seguros[c][f]=parseFloat(v)||0;guardarSegurosLocal();}}
+function editarNivel(c,n,f,v){if(seguros[c]?.niveles?.[n]){seguros[c].niveles[n][f]=parseFloat(v)||0;guardarSegurosLocal();}}
+function eliminarSeguro(c){if(!confirm('¿Eliminar el seguro "'+(seguros[c]?.nombre||c)+'"?'))return;delete seguros[c];guardarSegurosLocal();buildSelectSeguros();mostrarConfig();toast('Seguro eliminado','success');}
+function guardarSegurosLocal(){localStorage.setItem('segurosConfig',JSON.stringify(seguros));}
+
+function agregarSeguro(){
+    const nombre=document.getElementById('cfgNombre').value.trim(),categoria=document.getElementById('cfgCategoria').value;
+    const valor=parseFloat(document.getElementById('cfgValor').value)||0,puntos=parseFloat(document.getElementById('cfgPuntos').value)||0;
+    if(!nombre){toast('El nombre es obligatorio','error');return;}
+    const clave=nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+    if(seguros[clave]){toast('Ya existe un seguro con ese nombre','error');return;}
+    seguros[clave]={nombre,categoria,valor,puntos};guardarSegurosLocal();buildSelectSeguros();mostrarConfig();
+    document.getElementById('cfgNombre').value='';document.getElementById('cfgValor').value='';document.getElementById('cfgPuntos').value='';
+    toast('Seguro "'+nombre+'" añadido correctamente ✓','success');
 }
 
-function mostrarConfig() {
-    const container = document.getElementById('listaConfig');
-    if (!Object.keys(seguros).length) {
-        container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);">No hay seguros configurados</div>';
-        return;
-    }
-    const cats = {};
-    for (let k in seguros) {
-        const s = seguros[k];
-        if (!cats[s.categoria]) cats[s.categoria] = [];
-        cats[s.categoria].push({ k, ...s });
-    }
-    const catLabels = { decesos:'🛡️ Decesos', hogar:'🏠 Hogar', vida:'❤️ Vida', salud:'🏥 Salud', otros:'📋 Otros' };
-    container.innerHTML = Object.entries(cats).map(([cat, lista]) => `
-        <div style="margin-bottom:18px;">
-            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
-                        color:var(--text3);padding:8px 0 6px;border-bottom:1px solid var(--border);margin-bottom:4px;">
-                ${catLabels[cat] || cat}
-            </div>
-            ${lista.map(s => {
-                if (s.tieneNiveles) {
-                    const filas = Object.entries(s.niveles || {}).map(([niv, datos]) => `
-                        <div style="display:grid;grid-template-columns:1fr 90px 90px 36px;gap:8px;
-                                    align-items:center;padding:6px 0;border-bottom:1px solid rgba(212,218,234,0.6);">
-                            <span style="font-size:0.82rem;color:var(--text2);padding-left:16px;">↳ Nivel ${niv}</span>
-                            <div><label style="font-size:0.62rem;color:var(--text3);display:block;">Valor %</label>
-                                <input type="number" step="0.01" value="${datos.valor}"
-                                    style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;
-                                           padding:5px 8px;color:var(--success);font-weight:600;font-size:0.82rem;"
-                                    onchange="editarNivel('${s.k}','${niv}','valor',this.value)"></div>
-                            <div><label style="font-size:0.62rem;color:var(--text3);display:block;">Puntos %</label>
-                                <input type="number" step="0.01" value="${datos.puntos}"
-                                    style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;
-                                           padding:5px 8px;color:var(--accent);font-weight:600;font-size:0.82rem;"
-                                    onchange="editarNivel('${s.k}','${niv}','puntos',this.value)"></div>
-                            <div></div>
-                        </div>`).join('');
-                    return `<div style="padding:8px 0;border-bottom:1px solid var(--border);">
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <strong style="font-size:0.88rem;">${s.nombre}</strong>
-                            <span class="badge badge-${s.categoria}">niveles</span>
-                        </div>${filas}</div>`;
-                } else {
-                    return `<div style="display:grid;grid-template-columns:1fr 90px 90px 36px;gap:8px;
-                                align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
-                        <span style="font-size:0.88rem;font-weight:500;">${s.nombre}</span>
-                        <div><label style="font-size:0.62rem;color:var(--text3);display:block;">Valor %</label>
-                            <input type="number" step="0.01" value="${s.valor}"
-                                style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;
-                                       padding:5px 8px;color:var(--success);font-weight:600;font-size:0.82rem;"
-                                onchange="editarSeguro('${s.k}','valor',this.value)"></div>
-                        <div><label style="font-size:0.62rem;color:var(--text3);display:block;">Puntos %</label>
-                            <input type="number" step="0.01" value="${s.puntos}"
-                                style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;
-                                       padding:5px 8px;color:var(--accent);font-weight:600;font-size:0.82rem;"
-                                onchange="editarSeguro('${s.k}','puntos',this.value)"></div>
-                        <button class="btn btn-danger btn-sm" onclick="eliminarSeguro('${s.k}')">🗑</button>
-                    </div>`;
-                }
-            }).join('')}
-        </div>`).join('');
+function encontrarSeguroPorNombre(tn){
+    for(let k in seguros){const s=seguros[k];if(!s.tieneNiveles){if(tn===s.nombre)return{clave:k,seg:s,nivel:null};}
+    else{for(let n in(s.niveles||{})){if(tn===s.nombre+' ('+n+')')return{clave:k,seg:s,nivel:n};}if(tn===s.nombre)return{clave:k,seg:s,nivel:null};}}return null;
 }
 
-function editarSeguro(clave, campo, valor) {
-    if (!seguros[clave]) return;
-    seguros[clave][campo] = parseFloat(valor) || 0;
-    guardarSegurosLocal();
-}
-
-function editarNivel(clave, nivel, campo, valor) {
-    if (!seguros[clave]?.niveles?.[nivel]) return;
-    seguros[clave].niveles[nivel][campo] = parseFloat(valor) || 0;
-    guardarSegurosLocal();
-}
-
-function eliminarSeguro(clave) {
-    if (!confirm('¿Eliminar el seguro "' + (seguros[clave]?.nombre || clave) + '"?')) return;
-    delete seguros[clave];
-    guardarSegurosLocal(); buildSelectSeguros(); mostrarConfig();
-    toast('Seguro eliminado', 'success');
-}
-
-function guardarSegurosLocal() {
-    localStorage.setItem('segurosConfig', JSON.stringify(seguros));
-}
-
-function agregarSeguro() {
-    const nombre    = document.getElementById('cfgNombre').value.trim();
-    const categoria = document.getElementById('cfgCategoria').value;
-    const valor     = parseFloat(document.getElementById('cfgValor').value)  || 0;
-    const puntos    = parseFloat(document.getElementById('cfgPuntos').value) || 0;
-    if (!nombre) { toast('El nombre es obligatorio', 'error'); return; }
-    const clave = nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-    if (seguros[clave]) { toast('Ya existe un seguro con ese nombre', 'error'); return; }
-    seguros[clave] = { nombre, categoria, valor, puntos };
-    guardarSegurosLocal(); buildSelectSeguros(); mostrarConfig();
-    document.getElementById('cfgNombre').value = '';
-    document.getElementById('cfgValor').value  = '';
-    document.getElementById('cfgPuntos').value = '';
-    toast('Seguro "' + nombre + '" añadido correctamente ✓', 'success');
-}
-
-// ================== APLICAR RATIOS ==================
-function abrirModalAplicarRatios() {
-    const hoy = new Date().toISOString().slice(0, 10);
-    document.getElementById('aplicarDesde').value = hoy;
-    document.getElementById('aplicarPreview').style.display = 'none';
-    document.getElementById('aplicarPreview').innerHTML = '';
+function abrirModalAplicarRatios(){
+    document.getElementById('aplicarDesde').value=new Date().toISOString().slice(0,10);
+    document.getElementById('aplicarPreview').style.display='none';
     document.getElementById('modalAplicarRatios').classList.add('open');
-    document.getElementById('aplicarDesde').onchange = actualizarPreviewRatios;
-    actualizarPreviewRatios();
+    document.getElementById('aplicarDesde').onchange=actualizarPreviewRatios;actualizarPreviewRatios();
 }
 
-function encontrarSeguroPorNombre(tipoNombre) {
-    for (let k in seguros) {
-        const s = seguros[k];
-        if (!s.tieneNiveles) {
-            if (tipoNombre === s.nombre) return { clave: k, seg: s, nivel: null };
-        } else {
-            for (let niv in (s.niveles || {})) {
-                if (tipoNombre === s.nombre + ' (' + niv + ')') return { clave: k, seg: s, nivel: niv };
-            }
-            if (tipoNombre === s.nombre) return { clave: k, seg: s, nivel: null };
-        }
-    }
-    return null;
+function actualizarPreviewRatios(){
+    const f=document.getElementById('aplicarDesde').value,p=document.getElementById('aplicarPreview');
+    if(!f){p.style.display='none';return;}
+    const af=ventas.filter(v=>(v.fecha||'').slice(0,10)>=f);p.style.display='block';
+    if(!af.length){p.innerHTML='⚠️ No hay ventas desde esa fecha. Los nuevos ratios se aplicarán a las próximas ventas.';p.style.color='var(--warning)';return;}
+    p.style.color='var(--text3)';
+    p.innerHTML=`✅ Se recalcularán <strong style="color:var(--text)">${af.length} venta${af.length!==1?'s':''}</strong> con fecha ≥ ${f.split('-').reverse().join('/')}.<br>Las ventas anteriores <strong>no se modificarán</strong>.`;
 }
 
-function actualizarPreviewRatios() {
-    const fecha   = document.getElementById('aplicarDesde').value;
-    const preview = document.getElementById('aplicarPreview');
-    if (!fecha) { preview.style.display = 'none'; return; }
-    const afectadas = ventas.filter(v => (v.fecha || '').slice(0, 10) >= fecha);
-    preview.style.display = 'block';
-    if (!afectadas.length) {
-        preview.innerHTML = '⚠️ No hay ventas desde esa fecha. Los nuevos ratios se aplicarán a las próximas ventas.';
-        preview.style.color = 'var(--warning)'; return;
-    }
-    preview.style.color = 'var(--text3)';
-    preview.innerHTML = `✅ Se recalcularán <strong style="color:var(--text)">${afectadas.length} venta${afectadas.length !== 1 ? 's' : ''}</strong> 
-        con fecha ≥ ${fecha.split('-').reverse().join('/')}.<br>Las ventas anteriores <strong>no se modificarán</strong>.`;
-}
-
-async function confirmarAplicarRatios() {
-    const fecha = document.getElementById('aplicarDesde').value;
-    if (!fecha) { toast('Selecciona una fecha', 'error'); return; }
+async function confirmarAplicarRatios(){
+    const f=document.getElementById('aplicarDesde').value;if(!f){toast('Selecciona una fecha','error');return;}
     guardarSegurosLocal();
-    const afectadas = ventas.filter(v => (v.fecha || '').slice(0, 10) >= fecha);
-    if (!afectadas.length) {
-        cerrarModal('modalAplicarRatios');
-        toast('Ratios guardados ✓ — se aplicarán a las próximas ventas', 'success'); return;
+    const af=ventas.filter(v=>(v.fecha||'').slice(0,10)>=f);
+    if(!af.length){cerrarModal('modalAplicarRatios');toast('Ratios guardados ✓ — se aplicarán a las próximas ventas','success');return;}
+    cerrarModal('modalAplicarRatios');setSyncing(true);let ok=0,err=0;
+    for(const v of af){
+        const m=encontrarSeguroPorNombre(v.tipoNombre);if(!m)continue;
+        const{seg,nivel}=m;
+        const rv=(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel])?seg.niveles[nivel].valor:(seg.valor||0);
+        const rp=(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel])?seg.niveles[nivel].puntos:(seg.puntos||0);
+        const nv=parseFloat((v.precio*rv/100).toFixed(2)),np=parseFloat((v.precio*rp/100).toFixed(2));
+        if(nv===v.valor&&np===v.puntos)continue;
+        const{error}=await db.from('ventas').update({valor:nv,puntos:np}).eq('id',v.id);
+        if(!error){const i=ventas.findIndex(x=>x.id===v.id);if(i!==-1)ventas[i]={...v,valor:nv,puntos:np};ok++;}else err++;
     }
-    cerrarModal('modalAplicarRatios');
-    setSyncing(true);
-    let actualizadas = 0, errores = 0;
-    for (const v of afectadas) {
-        const match = encontrarSeguroPorNombre(v.tipoNombre);
-        if (!match) continue;
-        const { seg, nivel } = match;
-        let rv = seg.tieneNiveles && nivel && seg.niveles?.[nivel] ? seg.niveles[nivel].valor  : seg.valor  || 0;
-        let rp = seg.tieneNiveles && nivel && seg.niveles?.[nivel] ? seg.niveles[nivel].puntos : seg.puntos || 0;
-        const nuevoValor  = parseFloat((v.precio * rv / 100).toFixed(2));
-        const nuevoPuntos = parseFloat((v.precio * rp / 100).toFixed(2));
-        if (nuevoValor === v.valor && nuevoPuntos === v.puntos) continue;
-        const updated = { ...v, valor: nuevoValor, puntos: nuevoPuntos };
-        const { error } = await db.from('ventas').update(toDB(updated)).eq('id', v.id);
-        if (!error) { const idx = ventas.findIndex(x => x.id === v.id); if (idx !== -1) ventas[idx] = updated; actualizadas++; }
-        else errores++;
-    }
-    renderTabla(); renderStats(); renderTrimestres(); renderResumen();
-    setSyncing(false);
-    if (errores === 0) toast(`Ratios aplicados ✓ — ${actualizadas} venta${actualizadas !== 1 ? 's' : ''} actualizada${actualizadas !== 1 ? 's' : ''}`, 'success');
-    else toast(`Actualizadas ${actualizadas}, con ${errores} error${errores !== 1 ? 'es' : ''}`, 'error');
+    renderTabla();renderStats();renderTrimestres();renderResumen();setSyncing(false);
+    toast(err===0?`Ratios aplicados ✓ — ${ok} venta${ok!==1?'s':''} actualizada${ok!==1?'s':''}`:`Actualizadas ${ok}, con ${err} error${err!==1?'es':''}`,err===0?'success':'error');
 }
 
-// ================== HELPERS ==================
-function limpiarForm() {
-    document.getElementById('tipoSeguro').value = '';
-    document.getElementById('nivelSeguro').innerHTML = '<option value="">—</option>';
-    document.getElementById('nivelSeguro').disabled = true;
-    document.getElementById('numeroPoliza').value   = '';
-    document.getElementById('nombreCliente').value  = '';
-    document.getElementById('precioTarifa').value   = '';
-    document.getElementById('valorCalculado').value = '';
-    document.getElementById('puntosCalculados').value = '';
-    document.getElementById('notaMovida').value     = '';
-    document.getElementById('grupoMovida').style.display = 'none';
-    _mesContableManual = false;
+function limpiarForm(){
+    document.getElementById('tipoSeguro').value='';
+    document.getElementById('nivelSeguro').innerHTML='<option value="">—</option>';document.getElementById('nivelSeguro').disabled=true;
+    ['numeroPoliza','nombreCliente','precioTarifa','valorCalculado','puntosCalculados','notaMovida'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('grupoMovida').style.display='none';_mesContableManual=false;
 }
 
-function showTab(tab, e) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('sec-' + tab).classList.add('active');
-    if (e && e.target) e.target.classList.add('active');
+function showTab(tab,event){
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById('sec-'+tab).classList.add('active');
+    if(event&&event.target)event.target.classList.add('active');
 }
 
-function cerrarModal(id) {
-    document.getElementById(id).classList.remove('open');
+function cerrarModal(id){document.getElementById(id).classList.remove('open');}
+
+function toast(msg,type=''){
+    const t=document.getElementById('toast');t.textContent=msg;
+    t.className='toast'+(type?' '+type:'');t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),3000);
 }
 
-function toast(msg, type = '') {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast' + (type ? ' ' + type : '');
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3000);
-}
+function fmt(f){if(!f)return'—';const[y,m,d]=String(f).slice(0,10).split('-');if(!y||!m||!d)return String(f);return`${d}/${m}/${y}`;}
 
-function fmt(f) {
-    if (!f) return '—';
-    const limpio = String(f).slice(0, 10);
-    const [y, m, d] = limpio.split('-');
-    if (!y || !m || !d) return String(f);
-    return `${d}/${m}/${y}`;
-}
+document.getElementById('mesContable').addEventListener('change',()=>{_mesContableManual=true;document.getElementById('grupoMovida').style.display='flex';});
 
-document.getElementById('mesContable').addEventListener('change', () => {
-    _mesContableManual = true;
-    document.getElementById('grupoMovida').style.display = 'flex';
-});
-
-window.onload = init;
+window.onload=init;
 </script>
 </body>
 </html>
