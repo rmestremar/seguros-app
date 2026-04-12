@@ -98,6 +98,20 @@
         .cierre-row:last-child { border-bottom:none; }
         .cierre-label { font-weight:600; color:var(--text2); }
         .cierre-input { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:7px 10px; color:var(--text); font-size:0.82rem; font-family:'DM Sans',sans-serif; }
+        th.sortable{cursor:pointer;user-select:none;}
+        th.sortable:hover{color:var(--text2);}
+        th.sort-asc::after{content:' ▲';font-size:0.58rem;opacity:0.7;}
+        th.sort-desc::after{content:' ▼';font-size:0.58rem;opacity:0.7;}
+        .pagination{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:12px;flex-wrap:wrap;}
+        .pg-btn{padding:5px 11px;border:1px solid var(--border);background:var(--bg3);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--text2);transition:all 0.15s;}
+        .pg-btn.active{background:var(--accent);color:white;border-color:var(--accent);}
+        .pg-btn:disabled{opacity:0.35;cursor:not-allowed;}
+        .pg-info{font-size:0.78rem;color:var(--text3);padding:0 4px;}
+        .progress-wrap{background:var(--bg3);border-radius:100px;height:10px;overflow:hidden;margin:8px 0 4px;border:1px solid var(--border);}
+        .progress-bar{height:100%;background:var(--accent);border-radius:100px;transition:width 0.5s ease;}
+        .progress-bar.done{background:var(--success);}
+        .chart-wrap{position:relative;height:180px;margin-top:8px;}
+        .historial-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
     </style>
 </head>
 <body>
@@ -134,6 +148,7 @@
             <div class="form-group"><label>Puntos</label><input type="number" id="puntosCalculados" readonly class="puntos-field"></div>
             <div class="form-group"><label>Mes Contable</label><input type="month" id="mesContable"></div>
             <div class="form-group" id="grupoMovida" style="display:none;"><label>Nota (mes movido)</label><input type="text" id="notaMovida" placeholder="Ej: movido de enero a febrero"></div>
+            <div class="form-group"><label>Notas</label><input type="text" id="notasVenta" placeholder="Ej: renovación, cliente referido"></div>
         </div>
         <div class="btn-row">
             <button class="btn btn-primary" onclick="guardarVenta()">💾 Guardar</button>
@@ -161,6 +176,16 @@
             <div class="stat-card"><div class="stat-value" id="st-mes-puntos">0</div><div class="stat-label">Puntos</div></div>
         </div>
     </div>
+    <!-- OBJETIVO MENSUAL -->
+    <div class="card" id="cardObjetivo" style="display:none;">
+        <div class="card-title" id="objetivo-mes-titulo">Objetivo mensual</div>
+        <div id="progresoMeta"></div>
+    </div>
+    <!-- TENDENCIA -->
+    <div class="card">
+        <div class="card-title">Tendencia (últimos 6 meses)</div>
+        <div class="chart-wrap"><canvas id="chartVentas"></canvas></div>
+    </div>
 </div>
 
 <div id="sec-trimestres" class="section">
@@ -173,7 +198,10 @@
 <div id="sec-resumen" class="section">
     <!-- HISTORIAL (antes en Registro) -->
     <div class="card">
-        <div class="card-title">Historial de ventas</div>
+        <div class="historial-header">
+            <div class="card-title" style="margin-bottom:0;">Historial de ventas</div>
+            <button class="btn btn-success btn-sm" onclick="exportarCSVHistorial()">📥 CSV</button>
+        </div>
         <div class="filter-row">
             <input type="month" id="filtroMes" onchange="renderTabla()">
             <select id="filtroCategoria" onchange="renderTabla()">
@@ -181,11 +209,22 @@
                 <option value="decesos">Decesos</option><option value="hogar">Hogar</option>
                 <option value="vida">Vida</option><option value="salud">Salud</option><option value="otros">Otros</option>
             </select>
+            <input type="text" id="filtroBusqueda" placeholder="Buscar cliente o póliza..." oninput="renderTabla()" style="min-width:180px;">
         </div>
         <div class="table-wrap">
-            <table><thead><tr><th>Fecha</th><th>Póliza</th><th>Cliente</th><th>Tipo</th><th>Tarifa</th><th>Valor</th><th>Pts</th><th>Mes cble.</th><th></th></tr></thead>
+            <table><thead><tr>
+                <th class="sortable" data-col="fecha" onclick="setSortCol('fecha')">Fecha</th>
+                <th class="sortable" data-col="poliza" onclick="setSortCol('poliza')">Póliza</th>
+                <th>Cliente</th><th>Tipo</th>
+                <th class="sortable" data-col="precio" onclick="setSortCol('precio')">Tarifa</th>
+                <th class="sortable" data-col="valor" onclick="setSortCol('valor')">Valor</th>
+                <th class="sortable" data-col="puntos" onclick="setSortCol('puntos')">Pts</th>
+                <th class="sortable" data-col="mesContable" onclick="setSortCol('mesContable')">Mes cble.</th>
+                <th></th>
+            </tr></thead>
             <tbody id="tbodyVentas"></tbody></table>
         </div>
+        <div class="pagination" id="paginacion"></div>
     </div>
     <!-- RESUMEN MENSUAL -->
     <div class="card">
@@ -211,6 +250,14 @@
 </div>
 
 <div id="sec-config" class="section">
+    <div class="card">
+        <div class="card-title">Objetivos mensuales</div>
+        <div class="form-grid">
+            <div class="form-group"><label>Meta de Valor (€/mes)</label><input type="number" id="cfgMetaValor" placeholder="Ej: 800" min="0" step="0.01"></div>
+            <div class="form-group"><label>Meta de Puntos (/mes)</label><input type="number" id="cfgMetaPuntos" placeholder="Ej: 500" min="0" step="0.01"></div>
+        </div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="guardarObjetivos()">💾 Guardar objetivos</button></div>
+    </div>
     <div class="card">
         <div class="card-title">Agregar nuevo seguro</div>
         <div class="form-grid">
@@ -269,13 +316,27 @@
             <div class="form-group"><label>Puntos</label><input type="number" id="editPuntos" readonly class="puntos-field"></div>
             <div class="form-group"><label>Mes Contable</label><input type="month" id="editMesContable"></div>
             <div class="form-group"><label>Nota (si mueves el mes)</label><input type="text" id="editNota" placeholder="Ej: movido de enero a febrero"></div>
+            <div class="form-group"><label>Notas</label><input type="text" id="editNotasVenta" placeholder="Ej: renovación, cliente referido"></div>
             <button class="btn btn-primary" onclick="guardarEdicion()" style="width:100%;">💾 Guardar cambios</button>
+        </div>
+    </div>
+</div>
+
+<div id="modalConfirmDelete" class="modal">
+    <div class="modal-box" style="max-width:400px;">
+        <div class="modal-header"><div class="modal-title">Confirmar eliminación</div><button class="modal-close" onclick="cerrarModal('modalConfirmDelete')">✕</button></div>
+        <p style="font-size:0.88rem;color:var(--text2);line-height:1.6;margin-bottom:14px;">¿Seguro que quieres borrar esta póliza? Esta acción no se puede deshacer.</p>
+        <div id="deleteInfo" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:0.83rem;color:var(--text3);margin-bottom:16px;line-height:1.7;"></div>
+        <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost" style="flex:1;" onclick="cerrarModal('modalConfirmDelete')">Cancelar</button>
+            <button class="btn btn-danger" style="flex:2;" onclick="confirmarEliminar()">🗑 Eliminar</button>
         </div>
     </div>
 </div>
 
 <div id="toast" class="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
 <script>
@@ -309,18 +370,22 @@ const SEGUROS_BASE={
 };
 
 let ventas=[],cierres=[],seguros={},usuarioId=null,_mesContableManual=false;
+let sortCol='fecha',sortDir=-1,paginaActual=1;
+const POR_PAGINA=25;
+let _ventaEliminarId=null,_chartInstance=null;
 
 function fromSupabase(v){
     return{id:String(v.id||''),fecha:String(v.fecha||'').slice(0,10),poliza:v.poliza||'',cliente:v.cliente||'',
         tipoNombre:v.tipo_nombre||'',categoria:v.categoria||'',precio:parseFloat(v.precio)||0,
         valor:parseFloat(v.valor)||0,puntos:parseFloat(v.puntos)||0,mes:String(v.mes||'').slice(0,7),
-        mesContable:String(v.mes_contable||v.mes||'').slice(0,7),movida:!!v.movida,notaMovida:v.nota_movida||''};
+        mesContable:String(v.mes_contable||v.mes||'').slice(0,7),movida:!!v.movida,notaMovida:v.nota_movida||'',
+        notas:v.notas||''};
 }
 
 function toSupabase(v){
     return{usuario_id:usuarioId,fecha:v.fecha,poliza:v.poliza,cliente:v.cliente,tipo_nombre:v.tipoNombre,
         categoria:v.categoria,precio:v.precio,valor:v.valor,puntos:v.puntos,mes:v.mes,
-        mes_contable:v.mesContable,movida:v.movida,nota_movida:v.notaMovida||''};
+        mes_contable:v.mesContable,movida:v.movida,nota_movida:v.notaMovida||'',notas:v.notas||''};
 }
 
 async function init(){
@@ -335,6 +400,10 @@ async function init(){
     document.getElementById('fechaEfecto').valueAsDate=new Date();
     document.getElementById('mesContable').value=hoy;
     buildSelectSeguros();mostrarConfig();
+    const _mv=localStorage.getItem('metaValor_'+usuarioId);
+    const _mp=localStorage.getItem('metaPuntos_'+usuarioId);
+    if(_mv)document.getElementById('cfgMetaValor').value=parseFloat(_mv);
+    if(_mp)document.getElementById('cfgMetaPuntos').value=parseFloat(_mp);
     setSyncing(true);
     try{await Promise.all([cargarVentas(),cargarCierres()]);}
     catch(e){console.error('Error al cargar:',e);toast('Error al conectar con la base de datos. Prueba recargar.','error');}
@@ -374,7 +443,10 @@ async function guardarVenta(){
     const nivel=document.getElementById('nivelSeguro').value;
     const mesContable=document.getElementById('mesContable').value;
     const notaMovida=document.getElementById('notaMovida').value.trim();
+    const notas=document.getElementById('notasVenta').value.trim();
     if(!tipo||!poliza||!precio||!fecha){toast('Completa los campos obligatorios (*)','error');return;}
+    const duplicada=ventas.find(v=>v.poliza===poliza);
+    if(duplicada){if(!confirm(`Ya existe la póliza "${poliza}" (${duplicada.cliente}, ${fmt(duplicada.fecha)}). ¿Continuar de todas formas?`))return;}
     const seg=seguros[tipo];
     let rv=seg.valor||0,rp=seg.puntos||0;
     if(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel]){rv=seg.niveles[nivel].valor;rp=seg.niveles[nivel].puntos;}
@@ -383,7 +455,7 @@ async function guardarVenta(){
     const venta={id:String(Date.now()),fecha,poliza,cliente,tipoNombre:seg.nombre+(nivel?` (${nivel})`:''),
         categoria:seg.categoria,precio,valor:parseFloat((precio*rv/100).toFixed(2)),
         puntos:parseFloat((precio*rp/100).toFixed(2)),mes:mesFecha,mesContable:mesContable||mesFecha,
-        movida,notaMovida:movida?notaMovida:''};
+        movida,notaMovida:movida?notaMovida:'',notas};
     setSyncing(true);
     const{data,error}=await db.from('ventas').insert([toSupabase(venta)]).select().single();
     if(error){console.error(error);toast('Error al guardar la venta','error');setSyncing(false);return;}
@@ -393,9 +465,16 @@ async function guardarVenta(){
     toast('Venta guardada correctamente ✓','success');setSyncing(false);
 }
 
-async function eliminarVenta(id){
-    if(!confirm('¿Eliminar esta venta?'))return;
-    setSyncing(true);
+function eliminarVenta(id){
+    const v=ventas.find(v=>v.id===id);if(!v)return;
+    _ventaEliminarId=id;
+    document.getElementById('deleteInfo').innerHTML=`<strong style="color:var(--text)">${v.poliza}</strong> — ${v.cliente}<br><span style="color:var(--text3)">${fmt(v.fecha)} · ${v.tipoNombre}</span><br><strong style="color:var(--danger)">${(+v.valor).toFixed(2)} € · ${(+v.puntos).toFixed(2)} pts</strong>`;
+    document.getElementById('modalConfirmDelete').classList.add('open');
+}
+
+async function confirmarEliminar(){
+    const id=_ventaEliminarId;if(!id)return;
+    cerrarModal('modalConfirmDelete');setSyncing(true);
     const{error}=await db.from('ventas').delete().eq('id',id);
     if(error){toast('Error al eliminar','error');setSyncing(false);return;}
     ventas=ventas.filter(v=>v.id!==id);
@@ -441,6 +520,7 @@ function abrirEdicion(id){
     document.getElementById('editPuntos').value=v.puntos;
     document.getElementById('editMesContable').value=v.mesContable||v.mes;
     document.getElementById('editNota').value=v.notaMovida||'';
+    document.getElementById('editNotasVenta').value=v.notas||'';
     document.getElementById('modalEdit').classList.add('open');
 }
 
@@ -468,7 +548,8 @@ async function guardarEdicion(){
     const updated={...v,poliza:document.getElementById('editPoliza').value,cliente:document.getElementById('editCliente').value,
         fecha:nuevaFecha,tipoNombre,categoria,precio:nuevoPrecio,valor:nv,puntos:np,
         mes:mesFecha,mesContable:nuevoMes||mesFecha,
-        movida:(nuevoMes||mesFecha)!==mesFecha,notaMovida:nuevaNota};
+        movida:(nuevoMes||mesFecha)!==mesFecha,notaMovida:nuevaNota,
+        notas:document.getElementById('editNotasVenta').value.trim()};
     setSyncing(true);
     const{error}=await db.from('ventas').update(toSupabase(updated)).eq('id',id);
     if(error){toast('Error al guardar','error');setSyncing(false);return;}
@@ -550,22 +631,63 @@ function calcularMesContable(){
 }
 
 function renderTabla(){
-    const mf=document.getElementById('filtroMes').value,cf=document.getElementById('filtroCategoria').value;
+    const mf=document.getElementById('filtroMes').value;
+    const cf=document.getElementById('filtroCategoria').value;
+    const busq=(document.getElementById('filtroBusqueda')?.value||'').toLowerCase().trim();
     const tbody=document.getElementById('tbodyVentas');
     let lista=[...ventas];
     if(mf)lista=lista.filter(v=>(v.mesContable||v.mes)===mf);
     if(cf)lista=lista.filter(v=>v.categoria===cf);
-    lista.sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
-    if(!lista.length){tbody.innerHTML='<tr><td colspan="9" class="empty-state">No hay ventas para este filtro</td></tr>';return;}
-    tbody.innerHTML=lista.map(v=>`<tr class="${v.movida?'movida':''}">
-        <td>${fmt(v.fecha)}</td><td style="font-family:'DM Mono',monospace;">${v.poliza}</td><td>${v.cliente}</td>
+    if(busq)lista=lista.filter(v=>v.cliente.toLowerCase().includes(busq)||v.poliza.toLowerCase().includes(busq));
+    // Sort
+    const strCols=new Set(['fecha','poliza','mesContable']);
+    lista.sort((a,b)=>{
+        let va=a[sortCol]??'',vb=b[sortCol]??'';
+        if(!strCols.has(sortCol)){va=+va||0;vb=+vb||0;}
+        if(va<vb)return sortDir;if(va>vb)return -sortDir;return 0;
+    });
+    // Sort indicators
+    document.querySelectorAll('th[data-col]').forEach(th=>{
+        th.classList.remove('sort-asc','sort-desc');
+        if(th.dataset.col===sortCol)th.classList.add(sortDir>0?'sort-asc':'sort-desc');
+    });
+    // Paginate
+    const total=lista.length;
+    const totalPags=Math.max(1,Math.ceil(total/POR_PAGINA));
+    if(paginaActual>totalPags)paginaActual=totalPags;
+    const ini=(paginaActual-1)*POR_PAGINA;
+    const pag=lista.slice(ini,ini+POR_PAGINA);
+    if(!lista.length){tbody.innerHTML='<tr><td colspan="9" class="empty-state">No hay ventas para este filtro</td></tr>';renderPaginacion(0,1);return;}
+    tbody.innerHTML=pag.map(v=>`<tr class="${v.movida?'movida':''}">
+        <td>${fmt(v.fecha)}</td><td style="font-family:'DM Mono',monospace;">${v.poliza}</td>
+        <td>${v.cliente}${v.notas?` <span title="${v.notas.replace(/"/g,'&quot;')}" style="cursor:help;color:var(--text3);">📝</span>`:''}</td>
         <td><span class="badge badge-${v.categoria}">${v.tipoNombre}</span>${v.movida?'<span class="badge badge-moved">↕ movida</span>':''}</td>
         <td>${(+v.precio).toFixed(2)}€</td><td style="color:var(--success);font-weight:600;">${(+v.valor).toFixed(2)}€</td>
         <td style="color:var(--accent);font-weight:600;">${(+v.puntos).toFixed(2)}</td>
         <td style="font-family:'DM Mono',monospace;color:${v.movida?'var(--moved)':''};">${v.mesContable||v.mes}</td>
         <td><button class="btn btn-ghost btn-sm" onclick="abrirEdicion('${v.id}')">✏️</button> <button class="btn btn-danger btn-sm" onclick="eliminarVenta('${v.id}')">🗑</button></td>
     </tr>`).join('');
+    renderPaginacion(total,totalPags);
 }
+
+function setSortCol(col){
+    if(sortCol===col)sortDir=-sortDir;else{sortCol=col;sortDir=-1;}
+    paginaActual=1;renderTabla();
+}
+
+function renderPaginacion(total,totalPags){
+    const el=document.getElementById('paginacion');if(!el)return;
+    if(totalPags<=1){el.innerHTML=total?`<span class="pg-info">${total} venta${total!==1?'s':''}</span>`:'';return;}
+    let html=`<button class="pg-btn" onclick="irPagina(${paginaActual-1})" ${paginaActual===1?'disabled':''}>‹</button>`;
+    let start=Math.max(1,paginaActual-2),end=Math.min(totalPags,start+4);
+    if(end-start<4)start=Math.max(1,end-4);
+    for(let i=start;i<=end;i++)html+=`<button class="pg-btn${i===paginaActual?' active':''}" onclick="irPagina(${i})">${i}</button>`;
+    html+=`<button class="pg-btn" onclick="irPagina(${paginaActual+1})" ${paginaActual===totalPags?'disabled':''}>›</button>`;
+    html+=`<span class="pg-info">${total} ventas</span>`;
+    el.innerHTML=html;
+}
+
+function irPagina(p){paginaActual=p;renderTabla();}
 
 function renderStats(){
     const totalImporte = ventas.reduce((s,v)=>s+(+v.precio),0);
@@ -589,6 +711,7 @@ function renderStats(){
     document.getElementById('st-mes-importe').textContent = mesImporte.toFixed(2)+'€';
     document.getElementById('st-mes-valor').textContent   = mesValor.toFixed(2)+'€';
     document.getElementById('st-mes-puntos').textContent  = mesPuntos.toFixed(0);
+    renderGoal();renderChart();
 }
 
 function renderTrimestres(){
@@ -745,10 +868,84 @@ async function confirmarAplicarRatios(){
     toast(err===0?`Ratios aplicados ✓ — ${ok} venta${ok!==1?'s':''} actualizada${ok!==1?'s':''}`:`Actualizadas ${ok}, con ${err} error${err!==1?'es':''}`,err===0?'success':'error');
 }
 
+function renderChart(){
+    const canvas=document.getElementById('chartVentas');if(!canvas||typeof Chart==='undefined')return;
+    const hoy=new Date();
+    const meses=[];
+    for(let i=5;i>=0;i--){const d=new Date(hoy.getFullYear(),hoy.getMonth()-i,1);meses.push(d.toISOString().slice(0,7));}
+    const NM=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const labels=meses.map(m=>{const[y,mo]=m.split('-');return NM[parseInt(mo)-1]+' '+y.slice(2);});
+    const dv=meses.map(m=>ventas.filter(v=>(v.mesContable||v.mes)===m).reduce((s,v)=>s+(+v.valor),0));
+    const dp=meses.map(m=>ventas.filter(v=>(v.mesContable||v.mes)===m).reduce((s,v)=>s+(+v.puntos),0));
+    if(_chartInstance)_chartInstance.destroy();
+    _chartInstance=new Chart(canvas,{type:'bar',data:{labels,datasets:[
+        {label:'Valor €',data:dv,backgroundColor:'rgba(22,163,74,0.7)',borderRadius:6,borderSkipped:false},
+        {label:'Puntos',data:dp,backgroundColor:'rgba(79,142,247,0.7)',borderRadius:6,borderSkipped:false}
+    ]},options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{font:{family:'DM Sans',size:11},color:'#4a5378',boxWidth:12}}},
+        scales:{x:{ticks:{font:{family:'DM Sans',size:11},color:'#8b93a7'},grid:{display:false}},
+                y:{ticks:{font:{family:'DM Sans',size:10},color:'#8b93a7'},grid:{color:'#e8edf7'}}}}});
+}
+
+function renderGoal(){
+    if(!usuarioId)return;
+    const metaV=parseFloat(localStorage.getItem('metaValor_'+usuarioId))||0;
+    const metaP=parseFloat(localStorage.getItem('metaPuntos_'+usuarioId))||0;
+    const card=document.getElementById('cardObjetivo');
+    const el=document.getElementById('progresoMeta');
+    if(!metaV&&!metaP){if(card)card.style.display='none';return;}
+    if(card)card.style.display='';
+    const hoy=new Date().toISOString().slice(0,7);
+    const NM=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const[yy,mm]=hoy.split('-');
+    document.getElementById('objetivo-mes-titulo').textContent='Objetivo — '+NM[parseInt(mm)-1]+' '+yy;
+    const mv=ventas.filter(v=>(v.mesContable||v.mes)===hoy);
+    const valor=mv.reduce((s,v)=>s+(+v.valor),0);
+    const puntos=mv.reduce((s,v)=>s+(+v.puntos),0);
+    function barra(actual,meta,etiqueta,sufijo){
+        const pct=Math.min(100,(meta?actual/meta*100:0));
+        const done=pct>=100;
+        return`<div style="margin-bottom:${metaV&&metaP?'14px':'0'};">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
+                <span style="font-size:0.75rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;">${etiqueta}</span>
+                <span style="font-size:0.82rem;font-family:'DM Mono',monospace;color:var(--text3);">${actual.toFixed(sufijo==='€'?2:0)}${sufijo} <span style="color:var(--text3);">/ ${meta.toFixed(sufijo==='€'?2:0)}${sufijo}</span></span>
+            </div>
+            <div class="progress-wrap"><div class="progress-bar${done?' done':''}" style="width:${pct.toFixed(1)}%"></div></div>
+            <div style="text-align:right;font-size:0.75rem;font-weight:600;color:${done?'var(--success)':'var(--text3)'};margin-top:3px;">${pct.toFixed(0)}%${done?' ✓':''}</div>
+        </div>`;
+    }
+    el.innerHTML=(metaV?barra(valor,metaV,'Valor','€'):'')+( metaP?barra(puntos,metaP,'Puntos',''):'');
+}
+
+function guardarObjetivos(){
+    const v=parseFloat(document.getElementById('cfgMetaValor').value)||0;
+    const p=parseFloat(document.getElementById('cfgMetaPuntos').value)||0;
+    localStorage.setItem('metaValor_'+usuarioId,v);
+    localStorage.setItem('metaPuntos_'+usuarioId,p);
+    renderGoal();
+    toast('Objetivos guardados ✓','success');
+}
+
+function exportarCSVHistorial(){
+    const mf=document.getElementById('filtroMes').value;
+    const cf=document.getElementById('filtroCategoria').value;
+    const busq=(document.getElementById('filtroBusqueda')?.value||'').toLowerCase().trim();
+    let l=[...ventas];
+    if(mf)l=l.filter(v=>(v.mesContable||v.mes)===mf);
+    if(cf)l=l.filter(v=>v.categoria===cf);
+    if(busq)l=l.filter(v=>v.cliente.toLowerCase().includes(busq)||v.poliza.toLowerCase().includes(busq));
+    l.sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+    const h=['Fecha','Póliza','Cliente','Tipo','Categoría','Tarifa €','Valor €','Puntos','Mes Contable','Movida','Nota','Notas'];
+    const r=l.map(v=>[v.fecha,v.poliza,v.cliente,v.tipoNombre,v.categoria,(+v.precio).toFixed(2),(+v.valor).toFixed(2),(+v.puntos).toFixed(0),v.mesContable||v.mes,v.movida?'Sí':'No',v.notaMovida||'',v.notas||'']);
+    const csv=[h,...r].map(x=>x.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
+    a.download='historial_'+(mf||'todas')+'.csv';a.click();
+}
+
 function limpiarForm(){
     document.getElementById('tipoSeguro').value='';
     document.getElementById('nivelSeguro').innerHTML='<option value="">—</option>';document.getElementById('nivelSeguro').disabled=true;
-    ['numeroPoliza','nombreCliente','precioTarifa','valorCalculado','puntosCalculados','notaMovida'].forEach(id=>document.getElementById(id).value='');
+    ['numeroPoliza','nombreCliente','precioTarifa','valorCalculado','puntosCalculados','notaMovida','notasVenta'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('grupoMovida').style.display='none';_mesContableManual=false;
 }
 
