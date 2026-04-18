@@ -271,7 +271,10 @@
     <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
             <div class="card-title" style="margin-bottom:0;">Seguros configurados</div>
-            <button class="btn btn-primary btn-sm" onclick="abrirModalAplicarRatios()">💾 Guardar y aplicar</button>
+            <div style="display:flex;gap:8px;">
+                <button class="btn btn-ghost btn-sm" onclick="mostrarHistorialRatios()">📋 Historial</button>
+                <button class="btn btn-primary btn-sm" onclick="abrirModalAplicarRatios()">💾 Guardar y aplicar</button>
+            </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 90px 90px 36px;gap:8px;padding:6px 0;border-bottom:2px solid var(--border);font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);">
             <span>Seguro</span><span>Valor %</span><span>Puntos %</span><span></span>
@@ -334,6 +337,17 @@
     </div>
 </div>
 
+<div id="modalHistorialRatios" class="modal">
+    <div class="modal-box" style="max-width:560px;">
+        <div class="modal-header">
+            <div class="modal-title">Historial de ratios</div>
+            <button class="modal-close" onclick="cerrarModal('modalHistorialRatios')">✕</button>
+        </div>
+        <p style="font-size:0.83rem;color:var(--text3);margin-bottom:16px;line-height:1.5;">Cada fila muestra los porcentajes que estuvieron vigentes desde esa fecha. El cálculo usa automáticamente el ratio activo en la fecha de cada venta.</p>
+        <div id="historialRatiosBody" style="max-height:55vh;overflow-y:auto;"></div>
+    </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
@@ -369,7 +383,7 @@ const SEGUROS_BASE={
     "responsabilidad_civil":{nombre:"Responsabilidad Civil",categoria:"otros",valor:50,puntos:0}
 };
 
-let ventas=[],cierres=[],seguros={},usuarioId=null,_mesContableManual=false;
+let ventas=[],cierres=[],seguros={},ratiosHistorial=[],usuarioId=null,_mesContableManual=false;
 let sortCol='fecha',sortDir=-1,paginaActual=1;
 const POR_PAGINA=25;
 let _ventaEliminarId=null,_chartInstance=null;
@@ -392,8 +406,18 @@ async function init(){
     const{data:{session}}=await db.auth.getSession();
     if(!session){window.location.href='index.html';return;}
     usuarioId=session.user.id;
-    const saved=localStorage.getItem('segurosConfig');
-    seguros=saved?JSON.parse(saved):JSON.parse(JSON.stringify(SEGUROS_BASE));
+    // Cargar ratios desde Supabase; migrar desde localStorage si es la primera vez
+    const{ratiosActuales,historial}=await cargarRatiosSupabase();
+    if(ratiosActuales){
+        seguros=ratiosActuales;
+        ratiosHistorial=historial;
+        localStorage.setItem('segurosConfig',JSON.stringify(seguros));
+    }else{
+        const saved=localStorage.getItem('segurosConfig');
+        seguros=saved?JSON.parse(saved):JSON.parse(JSON.stringify(SEGUROS_BASE));
+        ratiosHistorial=[];
+        await migrarRatiosASupabase(seguros);
+    }
     const hoy=new Date().toISOString().slice(0,7);
     document.getElementById('filtroMes').value=hoy;
     document.getElementById('resumenMes').value=hoy;
@@ -448,8 +472,7 @@ async function guardarVenta(){
     const duplicada=ventas.find(v=>v.poliza===poliza);
     if(duplicada){if(!confirm(`Ya existe la póliza "${poliza}" (${duplicada.cliente}, ${fmt(duplicada.fecha)}). ¿Continuar de todas formas?`))return;}
     const seg=seguros[tipo];
-    let rv=seg.valor||0,rp=seg.puntos||0;
-    if(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel]){rv=seg.niveles[nivel].valor;rp=seg.niveles[nivel].puntos;}
+    const{rv,rp}=getRatioEnFechaLocal(tipo,nivel||null,fecha);
     const mesFecha=fecha.slice(0,7);
     const movida=mesContable!==mesFecha;
     const venta={id:String(Date.now()),fecha,poliza,cliente,tipoNombre:seg.nombre+(nivel?` (${nivel})`:''),
@@ -573,10 +596,9 @@ function recalcularEdit(){
     const tipo=document.getElementById('editTipo').value;
     const nivel=document.getElementById('editNivel').value;
     const precio=parseFloat(document.getElementById('editTarifa').value)||0;
+    const fecha=document.getElementById('editFecha').value||new Date().toISOString().slice(0,10);
     if(!tipo||!seguros[tipo]){return;}
-    const seg=seguros[tipo];
-    const rv=(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel])?seg.niveles[nivel].valor:(seg.valor||0);
-    const rp=(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel])?seg.niveles[nivel].puntos:(seg.puntos||0);
+    const{rv,rp}=getRatioEnFechaLocal(tipo,nivel||null,fecha);
     document.getElementById('editValor').value=(precio*rv/100).toFixed(2);
     document.getElementById('editPuntos').value=(precio*rp/100).toFixed(2);
 }
@@ -613,10 +635,9 @@ function calcular(){
     const tipo=document.getElementById('tipoSeguro').value;
     const precio=parseFloat(document.getElementById('precioTarifa').value)||0;
     const nivel=document.getElementById('nivelSeguro').value;
+    const fecha=document.getElementById('fechaEfecto').value||new Date().toISOString().slice(0,10);
     if(!tipo||!seguros[tipo]){document.getElementById('valorCalculado').value='';document.getElementById('puntosCalculados').value='';return;}
-    const seg=seguros[tipo];let rv,rp;
-    if(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel]){rv=seg.niveles[nivel].valor;rp=seg.niveles[nivel].puntos;}
-    else{rv=seg.valor;rp=seg.puntos;}
+    const{rv,rp}=getRatioEnFechaLocal(tipo,nivel||null,fecha);
     document.getElementById('valorCalculado').value=(precio*rv/100).toFixed(2);
     document.getElementById('puntosCalculados').value=(precio*rp/100).toFixed(2);
     calcularMesContable();
@@ -816,6 +837,97 @@ function editarNivel(c,n,f,v){if(seguros[c]?.niveles?.[n]){seguros[c].niveles[n]
 function eliminarSeguro(c){if(!confirm('¿Eliminar el seguro "'+(seguros[c]?.nombre||c)+'"?'))return;delete seguros[c];guardarSegurosLocal();buildSelectSeguros();mostrarConfig();toast('Seguro eliminado','success');}
 function guardarSegurosLocal(){localStorage.setItem('segurosConfig',JSON.stringify(seguros));}
 
+// ── Ratios persistentes en Supabase ──────────────────────────────────────────
+
+async function cargarRatiosSupabase(){
+    const{data,error}=await db.from('seguros_ratios').select('*').eq('usuario_id',usuarioId).order('vigente_desde',{ascending:false});
+    if(error||!data||!data.length)return{ratiosActuales:null,historial:[]};
+    const result={};
+    const clavas=[...new Set(data.map(r=>r.clave))];
+    for(const clave of clavas){
+        const rows=data.filter(r=>r.clave===clave);
+        const latest=rows[0];
+        if(latest.tiene_niveles){
+            result[clave]={nombre:latest.nombre,categoria:latest.categoria,tieneNiveles:true,niveles:{}};
+            const niveles=[...new Set(rows.filter(r=>r.nivel).map(r=>r.nivel))];
+            for(const n of niveles){
+                const nr=rows.filter(r=>r.nivel===n)[0];
+                result[clave].niveles[n]={valor:parseFloat(nr.valor),puntos:parseFloat(nr.puntos)};
+            }
+        }else{
+            const r=rows.filter(r=>!r.nivel)[0]||rows[0];
+            result[clave]={nombre:r.nombre,categoria:r.categoria,valor:parseFloat(r.valor),puntos:parseFloat(r.puntos)};
+        }
+    }
+    return{ratiosActuales:Object.keys(result).length?result:null,historial:data};
+}
+
+async function migrarRatiosASupabase(seg){
+    const rows=[],hoy=new Date().toISOString().slice(0,10);
+    for(const clave in seg){
+        const s=seg[clave];
+        if(s.tieneNiveles){
+            for(const n in(s.niveles||{})){rows.push({usuario_id:usuarioId,clave,nombre:s.nombre,categoria:s.categoria,tiene_niveles:true,nivel:n,valor:s.niveles[n].valor,puntos:s.niveles[n].puntos,vigente_desde:hoy});}
+        }else{
+            rows.push({usuario_id:usuarioId,clave,nombre:s.nombre,categoria:s.categoria,tiene_niveles:false,nivel:null,valor:s.valor,puntos:s.puntos,vigente_desde:hoy});
+        }
+    }
+    if(!rows.length)return;
+    const{error}=await db.from('seguros_ratios').insert(rows);
+    if(!error){const{data}=await db.from('seguros_ratios').select('*').eq('usuario_id',usuarioId).order('vigente_desde',{ascending:false});ratiosHistorial=data||[];}
+}
+
+async function guardarRatiosEnSupabase(vigenteDesdeFecha){
+    const rows=[];
+    for(const clave in seguros){
+        const s=seguros[clave];
+        if(s.tieneNiveles){
+            for(const n in(s.niveles||{})){rows.push({usuario_id:usuarioId,clave,nombre:s.nombre,categoria:s.categoria,tiene_niveles:true,nivel:n,valor:s.niveles[n].valor,puntos:s.niveles[n].puntos,vigente_desde:vigenteDesdeFecha});}
+        }else{
+            rows.push({usuario_id:usuarioId,clave,nombre:s.nombre,categoria:s.categoria,tiene_niveles:false,nivel:null,valor:s.valor,puntos:s.puntos,vigente_desde:vigenteDesdeFecha});
+        }
+    }
+    if(!rows.length)return false;
+    const{error}=await db.from('seguros_ratios').insert(rows);
+    if(!error){const{data}=await db.from('seguros_ratios').select('*').eq('usuario_id',usuarioId).order('vigente_desde',{ascending:false});ratiosHistorial=data||[];}
+    return !error;
+}
+
+// Devuelve {rv, rp} usando el ratio vigente en la fecha dada (o el actual si no hay historia)
+function getRatioEnFechaLocal(clave,nivel,fecha){
+    if(!fecha)fecha=new Date().toISOString().slice(0,10);
+    const nivelNorm=nivel||null;
+    const rows=ratiosHistorial
+        .filter(r=>r.clave===clave&&r.nivel===nivelNorm&&r.vigente_desde<=fecha)
+        .sort((a,b)=>b.vigente_desde.localeCompare(a.vigente_desde));
+    if(rows.length)return{rv:parseFloat(rows[0].valor),rp:parseFloat(rows[0].puntos)};
+    // fallback al config en memoria
+    const s=seguros[clave];if(!s)return{rv:0,rp:0};
+    if(s.tieneNiveles&&nivel&&s.niveles?.[nivel])return{rv:s.niveles[nivel].valor,rp:s.niveles[nivel].puntos};
+    return{rv:s.valor||0,rp:s.puntos||0};
+}
+
+function mostrarHistorialRatios(){
+    if(!ratiosHistorial.length){toast('Aún no hay historial guardado en la base de datos','error');return;}
+    // Agrupar por clave+nivel, ordenado por fecha desc
+    const grupos={};
+    for(const r of ratiosHistorial){
+        const key=r.clave+(r.nivel?'__'+r.nivel:'');
+        if(!grupos[key])grupos[key]=[];
+        grupos[key].push(r);
+    }
+    const claves=Object.keys(grupos);
+    const html=claves.map(key=>{
+        const rows=grupos[key];
+        const {nombre,nivel}=rows[0];
+        const etiqueta=nombre+(nivel?' ('+nivel+')':'');
+        const filas=rows.map(r=>`<tr><td style="padding:6px 10px;border-top:1px solid var(--border);font-family:'DM Mono',monospace;font-size:0.8rem;">${r.vigente_desde.slice(0,10).split('-').reverse().join('/')}</td><td style="padding:6px 10px;border-top:1px solid var(--border);color:var(--success);font-weight:600;">${parseFloat(r.valor).toFixed(2)}%</td><td style="padding:6px 10px;border-top:1px solid var(--border);color:var(--accent);font-weight:600;">${parseFloat(r.puntos).toFixed(2)}%</td></tr>`).join('');
+        return`<div style="margin-bottom:14px;"><div style="font-size:0.82rem;font-weight:600;color:var(--text2);margin-bottom:4px;">${etiqueta}</div><div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;"><table style="width:100%;border-collapse:collapse;font-size:0.8rem;"><thead><tr style="background:var(--bg3);"><th style="padding:6px 10px;text-align:left;font-size:0.65rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text3);">Vigente desde</th><th style="padding:6px 10px;text-align:left;font-size:0.65rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text3);">Valor %</th><th style="padding:6px 10px;text-align:left;font-size:0.65rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text3);">Puntos %</th></tr></thead><tbody>${filas}</tbody></table></div></div>`;
+    }).join('');
+    document.getElementById('historialRatiosBody').innerHTML=html;
+    document.getElementById('modalHistorialRatios').classList.add('open');
+}
+
 function agregarSeguro(){
     const nombre=document.getElementById('cfgNombre').value.trim(),categoria=document.getElementById('cfgCategoria').value;
     const valor=parseFloat(document.getElementById('cfgValor').value)||0,puntos=parseFloat(document.getElementById('cfgPuntos').value)||0;
@@ -850,15 +962,18 @@ function actualizarPreviewRatios(){
 
 async function confirmarAplicarRatios(){
     const f=document.getElementById('aplicarDesde').value;if(!f){toast('Selecciona una fecha','error');return;}
+    // Guardar ratios en Supabase con la fecha de vigencia elegida
+    const guardado=await guardarRatiosEnSupabase(f);
     guardarSegurosLocal();
+    if(!guardado)toast('⚠️ No se pudo guardar en la base de datos, pero los ratios están en local','error');
     const af=ventas.filter(v=>(v.fecha||'').slice(0,10)>=f);
     if(!af.length){cerrarModal('modalAplicarRatios');toast('Ratios guardados ✓ — se aplicarán a las próximas ventas','success');return;}
     cerrarModal('modalAplicarRatios');setSyncing(true);let ok=0,err=0;
     for(const v of af){
         const m=encontrarSeguroPorNombre(v.tipoNombre);if(!m)continue;
-        const{seg,nivel}=m;
-        const rv=(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel])?seg.niveles[nivel].valor:(seg.valor||0);
-        const rp=(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel])?seg.niveles[nivel].puntos:(seg.puntos||0);
+        const{clave,nivel}=m;
+        // Usar el ratio vigente en la fecha de cada venta (ya incluye el recién guardado)
+        const{rv,rp}=getRatioEnFechaLocal(clave,nivel,v.fecha);
         const nv=parseFloat((v.precio*rv/100).toFixed(2)),np=parseFloat((v.precio*rp/100).toFixed(2));
         if(nv===v.valor&&np===v.puntos)continue;
         const{error}=await db.from('ventas').update({valor:nv,puntos:np}).eq('id',v.id);
