@@ -168,7 +168,10 @@
     </div>
     <!-- TOTAL MES ACTUAL -->
     <div class="card">
-        <div class="card-title" id="st-mes-titulo"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div class="card-title" id="st-mes-titulo" style="margin-bottom:0;"></div>
+            <input type="month" id="filtroMesStats" style="width:auto;font-size:0.82rem;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;" onchange="cambiarMesStats(this.value)">
+        </div>
         <div class="stats-row">
             <div class="stat-card"><div class="stat-value" id="st-mes-ventas">0</div><div class="stat-label">Ventas</div></div>
             <div class="stat-card"><div class="stat-value" id="st-mes-importe">0€</div><div class="stat-label">Importe</div></div>
@@ -763,6 +766,7 @@ function renderStats(){
     document.getElementById('st-valor').textContent   = totalValor.toFixed(2)+'€';
     document.getElementById('st-puntos').textContent  = totalPuntos.toFixed(0);
 
+    const picker=document.getElementById('filtroMesStats');if(picker)picker.value=mes;
     document.getElementById('st-mes-titulo').textContent  = nombresMes[parseInt(mm)-1]+' '+anio;
     document.getElementById('st-mes-ventas').textContent  = mesMes.length;
     document.getElementById('st-mes-importe').textContent = mesImporte.toFixed(2)+'€';
@@ -775,35 +779,44 @@ function renderStats(){
 
 function renderTrimestres(){
     const anio=parseInt(document.getElementById('trimestreAnio').value);
+    const metaV=parseFloat(localStorage.getItem('metaValor_'+usuarioId))||0;
+    const metaP=parseFloat(localStorage.getItem('metaPuntos_'+usuarioId))||0;
     const M=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
     const td=[{n:'T1',e:'Dic · Ene · Feb',m:[`${anio-1}-12`,`${anio}-01`,`${anio}-02`]},{n:'T2',e:'Mar · Abr · May',m:[`${anio}-03`,`${anio}-04`,`${anio}-05`]},{n:'T3',e:'Jun · Jul · Ago',m:[`${anio}-06`,`${anio}-07`,`${anio}-08`]},{n:'T4',e:'Sep · Oct · Nov',m:[`${anio}-09`,`${anio}-10`,`${anio}-11`]}];
     document.getElementById('trimestreGrid').innerHTML=td.map(t=>{
         const vt=ventas.filter(v=>t.m.includes(v.mesContable||v.mes));
         const ti=vt.reduce((s,v)=>s+(+v.precio),0),tv=vt.reduce((s,v)=>s+(+v.valor),0),tp=vt.reduce((s,v)=>s+(+v.puntos),0);
-        const fm=t.m.map(m=>{const mv=ventas.filter(v=>(v.mesContable||v.mes)===m);const[yy,mm]=m.split('-');
+        const fm=t.m.map(m=>{
+            const mv=ventas.filter(v=>(v.mesContable||v.mes)===m);
+            const[yy,mm]=m.split('-');
+            const mVal=mv.reduce((s,v)=>s+(+v.valor),0);
+            const mPts=mv.reduce((s,v)=>s+(+v.puntos),0);
+            const mImp=mv.reduce((s,v)=>s+(+v.precio),0);
             return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.82rem;">
                 <span style="color:var(--text2);min-width:70px;">${M[parseInt(mm)-1]} ${yy}</span>
                 <span style="color:var(--text3);">${mv.length} venta${mv.length!==1?'s':''}</span>
-                <span style="color:var(--text2);">${mv.reduce((s,v)=>s+(+v.precio),0).toFixed(2)} €</span>
-                <span style="color:var(--success);">${mv.reduce((s,v)=>s+(+v.valor),0).toFixed(2)} €</span>
-                <span style="color:var(--accent);font-family:'DM Mono',monospace;">${mv.reduce((s,v)=>s+(+v.puntos),0).toFixed(2)} pts</span>
+                <span style="color:var(--text2);">${mImp.toFixed(2)} €</span>
+                <span style="color:${colorMeta(mVal,metaV)};font-weight:600;">${mVal.toFixed(2)} €</span>
+                <span style="color:${colorMeta(mPts,metaP)};font-weight:600;font-family:'DM Mono',monospace;">${mPts.toFixed(2)} pts</span>
             </div>`;}).join('');
         return`<div class="card"><div class="card-title">${t.n} &nbsp;·&nbsp; ${t.e}</div>${fm}
             <div style="display:flex;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
                 <div class="stat-card" style="flex:1;"><div class="stat-value">${vt.length}</div><div class="stat-label">Ventas</div></div>
                 <div class="stat-card" style="flex:1;"><div class="stat-value" style="color:var(--text2);">${ti.toFixed(2)}€</div><div class="stat-label">Importe</div></div>
-                <div class="stat-card" style="flex:1;"><div class="stat-value" style="color:var(--success);">${tv.toFixed(2)}€</div><div class="stat-label">Valor</div></div>
-                <div class="stat-card" style="flex:1;"><div class="stat-value">${tp.toFixed(2)}</div><div class="stat-label">Puntos</div></div>
+                <div class="stat-card" style="flex:1;"><div class="stat-value" style="color:${colorMeta(tv,metaV)};">${tv.toFixed(2)}€</div><div class="stat-label">Valor</div></div>
+                <div class="stat-card" style="flex:1;"><div class="stat-value" style="color:${colorMeta(tp,metaP)};">${tp.toFixed(2)}</div><div class="stat-label">Puntos</div></div>
             </div></div>`;}).join('');
 }
 
 function renderResumen(){
+    const metaV=parseFloat(localStorage.getItem('metaValor_'+usuarioId))||0;
+    const metaP=parseFloat(localStorage.getItem('metaPuntos_'+usuarioId))||0;
     const mes=document.getElementById('filtroMes').value,lista=ventas.filter(v=>(v.mesContable||v.mes)===mes);
     const ti=lista.reduce((s,v)=>s+(+v.precio),0),tv=lista.reduce((s,v)=>s+(+v.valor),0),tp=lista.reduce((s,v)=>s+(+v.puntos),0);
     document.getElementById('res-ventas').textContent=lista.length;
     document.getElementById('res-importe').textContent=ti.toFixed(2)+'€';
-    document.getElementById('res-valor').textContent=tv.toFixed(2)+'€';
-    document.getElementById('res-puntos').textContent=tp.toFixed(2);
+    const elRV=document.getElementById('res-valor');elRV.textContent=tv.toFixed(2)+'€';elRV.style.color=colorMeta(tv,metaV);
+    const elRP=document.getElementById('res-puntos');elRP.textContent=tp.toFixed(2);elRP.style.color=colorMeta(tp,metaP);
     const tbody=document.getElementById('tbodyResumen');
     if(!lista.length){tbody.innerHTML='<tr><td colspan="6" class="empty-state">No hay ventas para este mes</td></tr>';return;}
     const g={};lista.forEach(v=>{const c=v.tipoNombre||'Sin tipo';if(!g[c])g[c]={ventas:0,importe:0,valor:0,puntos:0,categoria:v.categoria};g[c].ventas++;g[c].importe+=(+v.precio);g[c].valor+=(+v.valor);g[c].puntos+=(+v.puntos);});
@@ -1080,6 +1093,8 @@ function renderGoal(mes){
     }
     el.innerHTML=(metaV?barra(valor,metaV,'Valor','€'):'')+( metaP?barra(puntos,metaP,'Puntos',''):'');
 }
+
+function cambiarMesStats(mes){_mesStats=mes||null;renderStats();}
 
 function toastCelebracion(msg){
     const t=document.getElementById('toast');t.textContent=msg;
