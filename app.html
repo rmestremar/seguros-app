@@ -422,10 +422,20 @@ async function init(){
     document.getElementById('fechaEfecto').valueAsDate=new Date();
     document.getElementById('mesContable').value=hoy;
     buildSelectSeguros();mostrarConfig();
-    const _mv=localStorage.getItem('metaValor_'+usuarioId);
-    const _mp=localStorage.getItem('metaPuntos_'+usuarioId);
-    if(_mv)document.getElementById('cfgMetaValor').value=parseFloat(_mv);
-    if(_mp)document.getElementById('cfgMetaPuntos').value=parseFloat(_mp);
+    // Cargar objetivos: primero Supabase, fallback localStorage
+    const{data:perfil}=await db.from('perfiles').select('meta_valor,meta_puntos').eq('id',usuarioId).single();
+    if(perfil?.meta_valor||perfil?.meta_puntos){
+        const mv=perfil.meta_valor||0,mp=perfil.meta_puntos||0;
+        localStorage.setItem('metaValor_'+usuarioId,mv);
+        localStorage.setItem('metaPuntos_'+usuarioId,mp);
+        if(mv)document.getElementById('cfgMetaValor').value=mv;
+        if(mp)document.getElementById('cfgMetaPuntos').value=mp;
+    }else{
+        const _mv=localStorage.getItem('metaValor_'+usuarioId);
+        const _mp=localStorage.getItem('metaPuntos_'+usuarioId);
+        if(_mv)document.getElementById('cfgMetaValor').value=parseFloat(_mv);
+        if(_mp)document.getElementById('cfgMetaPuntos').value=parseFloat(_mp);
+    }
     setSyncing(true);
     try{await Promise.all([cargarVentas(),cargarCierres()]);}
     catch(e){console.error('Error al cargar:',e);toast('Error al conectar con la base de datos. Prueba recargar.','error');}
@@ -1077,12 +1087,14 @@ function toastCelebracion(msg){
     setTimeout(()=>t.classList.remove('show'),5000);
 }
 
-function guardarObjetivos(){
+async function guardarObjetivos(){
     const v=parseFloat(document.getElementById('cfgMetaValor').value)||0;
     const p=parseFloat(document.getElementById('cfgMetaPuntos').value)||0;
     localStorage.setItem('metaValor_'+usuarioId,v);
     localStorage.setItem('metaPuntos_'+usuarioId,p);
-    renderGoal();
+    const{error}=await db.from('perfiles').update({meta_valor:v,meta_puntos:p}).eq('id',usuarioId);
+    if(error)console.error('Error guardando objetivos en Supabase:',error);
+    renderGoal();renderChart();
     toast('Objetivos guardados ✓','success');
 }
 
