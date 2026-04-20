@@ -591,8 +591,7 @@ async function guardarEdicion(){
         const seg=seguros[tipo];
         tipoNombre=seg.nombre+(nivel?` (${nivel})`:'');
         categoria=seg.categoria;
-        const rv=(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel])?seg.niveles[nivel].valor:(seg.valor||0);
-        const rp=(seg.tieneNiveles&&nivel&&seg.niveles?.[nivel])?seg.niveles[nivel].puntos:(seg.puntos||0);
+        const{rv,rp}=getRatioEnFechaLocal(tipo,nivel||null,nuevaFecha);
         nv=parseFloat((nuevoPrecio*rv/100).toFixed(2));
         np=parseFloat((nuevoPrecio*rp/100).toFixed(2));
     }
@@ -883,8 +882,17 @@ function mostrarConfig(){
         ).join('')}</div>`).join('');
 }
 
-function editarSeguro(c,f,v){if(seguros[c]){seguros[c][f]=parseFloat(v)||0;guardarSegurosLocal();}}
-function editarNivel(c,n,f,v){if(seguros[c]?.niveles?.[n]){seguros[c].niveles[n][f]=parseFloat(v)||0;guardarSegurosLocal();}}
+function editarSeguro(c,f,v){if(seguros[c]){seguros[c][f]=parseFloat(v)||0;guardarSegurosLocal();_sincRatioHistorialLocal(c,null);}}
+function editarNivel(c,n,f,v){if(seguros[c]?.niveles?.[n]){seguros[c].niveles[n][f]=parseFloat(v)||0;guardarSegurosLocal();_sincRatioHistorialLocal(c,n);}}
+function _sincRatioHistorialLocal(clave,nivel){
+    const s=seguros[clave];if(!s)return;
+    const hoy=new Date().toISOString().slice(0,10);
+    const nivelNorm=nivel||null;
+    const valor=nivelNorm?s.niveles?.[nivelNorm]?.valor||0:s.valor||0;
+    const puntos=nivelNorm?s.niveles?.[nivelNorm]?.puntos||0:s.puntos||0;
+    ratiosHistorial=ratiosHistorial.filter(r=>!(r.clave===clave&&r.nivel===nivelNorm&&r.vigente_desde===hoy));
+    ratiosHistorial.unshift({usuario_id:usuarioId,clave,nombre:s.nombre,categoria:s.categoria,tiene_niveles:!!s.tieneNiveles,nivel:nivelNorm,valor,puntos,vigente_desde:hoy});
+}
 function eliminarSeguro(c){if(!confirm('¿Eliminar el seguro "'+(seguros[c]?.nombre||c)+'"?'))return;delete seguros[c];guardarSegurosLocal();buildSelectSeguros();mostrarConfig();toast('Seguro eliminado','success');}
 function guardarSegurosLocal(){localStorage.setItem('segurosConfig',JSON.stringify(seguros));}
 
