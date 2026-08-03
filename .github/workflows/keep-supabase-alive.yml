@@ -1,7 +1,7 @@
 name: Keep Supabase alive
 
 # Supabase pausa los proyectos del plan Free tras 7 días sin actividad.
-# Este workflow hace una petición ligera cada 3 días para evitarlo.
+# Este workflow hace una escritura real cada 2 días para evitarlo.
 
 on:
   schedule:
