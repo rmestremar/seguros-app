@@ -1,7 +1,7 @@
 name: Keep Supabase alive
 
 # Supabase pausa los proyectos del plan Free tras 7 días sin actividad.
-# Este workflow hace una petición ligera cada 3 días para evitarlo.
+# Este workflow hace una escritura real cada 2 días para evitarlo.
 
 on:
   schedule:
@@ -17,12 +17,11 @@ jobs:
           SUPABASE_URL: https://weicwtambziqoxunajoa.supabase.co
           SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlaWN3dGFtYnppcW94dW5ham9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTQ3MDQsImV4cCI6MjA5MDk3MDcwNH0.hdqrTPuQ6SEDC5wVDdSbSpuI552DFEBnw0TClmlmZE8
         run: |
-          curl -sS \
+          curl -sS -f \
             -X POST \
             -H "apikey: $SUPABASE_ANON_KEY" \
             -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
             -H "Content-Type: application/json" \
             -H "Prefer: resolution=merge-duplicates,return=minimal" \
             -d "{\"id\": 1, \"pinged_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" \
-            -w "\nHTTP_STATUS:%{http_code}\n" \
             "$SUPABASE_URL/rest/v1/keepalive"
