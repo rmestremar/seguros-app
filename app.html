@@ -70,6 +70,15 @@
         .badge-salud   { background:#dcfce7; color:#15803d; }
         .badge-otros   { background:#f1f5f9; color:#475569; }
         .badge-moved   { background:#ffedd5; color:var(--moved); margin-left:5px; }
+        .badge-pendiente { background:#fef3c7; color:#b45309; margin-left:5px; }
+        .badge-validada  { background:#dcfce7; color:#15803d; margin-left:5px; }
+        .badge-rechazada { background:#fee2e2; color:#b91c1c; margin-left:5px; }
+        tr.pendiente td { background:rgba(234,179,8,0.07); }
+        tr.pendiente td:first-child { border-left:3px solid #eab308; }
+        tr.rechazada td { background:rgba(239,68,68,0.06); }
+        tr.rechazada td:first-child { border-left:3px solid var(--danger); }
+        .team-sum { display:grid; grid-template-columns:1fr; gap:10px; margin-bottom:14px; }
+        @media(min-width:700px){.team-sum{grid-template-columns:repeat(2,1fr)}}
         .empty-state { text-align:center; padding:40px; color:var(--text3); font-size:0.9rem; }
         .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:500; justify-content:center; align-items:flex-end; }
         @media(min-width:600px){.modal{align-items:center;padding:20px}}
@@ -129,6 +138,8 @@
     <div class="tab" onclick="showTab('trimestres',event)">📅 Trimestres</div>
     <div class="tab" onclick="showTab('resumen',event)">📊 Resumen</div>
     <div class="tab" onclick="showTab('cierres',event)">🗓️ Cierres</div>
+    <div class="tab" id="tabValidacion" style="display:none;" onclick="showTab('validacion',event)">✅ Validación <span id="tabValidacionBadge" style="display:none;background:#eab308;color:#fff;border-radius:100px;padding:1px 7px;font-size:0.7rem;margin-left:3px;"></span></div>
+    <div class="tab" id="tabAdmin" style="display:none;" onclick="showTab('admin',event)">👥 Admin</div>
     <div class="tab" onclick="showTab('config',event)">⚙️ Config</div>
 </div>
 
@@ -251,14 +262,63 @@
     </div>
 </div>
 
+<div id="sec-validacion" class="section">
+    <div class="card" id="cardEquipoMeta" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div class="card-title" style="margin-bottom:0;">Consecución del equipo</div>
+            <input type="month" id="valMes" style="width:auto;font-size:0.82rem;padding:6px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;" onchange="renderValidacion()">
+        </div>
+        <div id="equipoProgreso"></div>
+    </div>
+    <div class="card">
+        <div class="card-title">Ventas del equipo</div>
+        <div class="filter-row">
+            <select id="valEstado" onchange="renderValidacion()">
+                <option value="pendiente">⏳ Pendientes</option>
+                <option value="">Todas</option>
+                <option value="validada">✓ Validadas</option>
+                <option value="rechazada">✗ Rechazadas</option>
+            </select>
+            <select id="valPersona" onchange="renderValidacion()"><option value="">Todas las personas</option></select>
+            <input type="month" id="valFiltroMes" onchange="renderValidacion()">
+            <input type="text" id="valBusqueda" placeholder="Buscar cliente o póliza..." oninput="renderValidacion()" style="min-width:160px;">
+        </div>
+        <div class="table-wrap">
+            <table><thead><tr>
+                <th>Fecha</th><th>Vendedor</th><th>Póliza</th><th>Cliente</th><th>Tipo</th>
+                <th>Tarifa</th><th>Valor</th><th>Pts</th><th>Estado</th><th>Acciones</th>
+            </tr></thead><tbody id="tbodyValidacion"></tbody></table>
+        </div>
+    </div>
+</div>
+
+<div id="sec-admin" class="section">
+    <div class="info-box">
+        <strong>Altas de usuario:</strong> las cuentas se crean en el panel de Supabase (Authentication → Add user).
+        Después aparecerán aquí para asignarles perfil, equipo y objetivos.
+    </div>
+    <div class="card">
+        <div class="card-title">Objetivos por perfil (mensuales)</div>
+        <p style="font-size:0.82rem;color:var(--text3);margin-bottom:12px;line-height:1.5;">Valores por defecto de cada perfil. Se aplican salvo que una persona tenga un objetivo propio asignado abajo.</p>
+        <div id="rolesObjetivosBody"></div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="guardarRolesObjetivos()">💾 Guardar objetivos de perfil</button></div>
+    </div>
+    <div class="card">
+        <div class="card-title">Usuarios y equipos</div>
+        <p style="font-size:0.82rem;color:var(--text3);margin-bottom:12px;line-height:1.5;">Asigna perfil y, para comerciales y CEO, el mánager responsable. El objetivo propio es opcional (vacío o 0 = usa el del perfil).</p>
+        <div class="table-wrap">
+            <table><thead><tr>
+                <th>Nombre</th><th>Perfil</th><th>Mánager</th><th>Meta Valor</th><th>Meta Puntos</th><th>Activo</th><th></th>
+            </tr></thead><tbody id="tbodyAdmin"></tbody></table>
+        </div>
+    </div>
+</div>
+
 <div id="sec-config" class="section">
     <div class="card">
-        <div class="card-title">Objetivos mensuales</div>
-        <div class="form-grid">
-            <div class="form-group"><label>Meta de Valor (€/mes)</label><input type="number" id="cfgMetaValor" placeholder="Ej: 800" min="0" step="0.01"></div>
-            <div class="form-group"><label>Meta de Puntos (/mes)</label><input type="number" id="cfgMetaPuntos" placeholder="Ej: 500" min="0" step="0.01"></div>
-        </div>
-        <div class="btn-row"><button class="btn btn-primary" onclick="guardarObjetivos()">💾 Guardar objetivos</button></div>
+        <div class="card-title">Tu objetivo mensual</div>
+        <div id="objetivoInfo" style="font-size:0.9rem;color:var(--text2);line-height:1.8;"></div>
+        <p style="font-size:0.8rem;color:var(--text3);margin-top:10px;line-height:1.5;">Los objetivos los define el administrador según tu perfil. Si crees que no es correcto, contacta con él.</p>
     </div>
     <div class="card">
         <div class="card-title">Agregar nuevo seguro</div>
@@ -389,17 +449,30 @@ let ventas=[],cierres=[],seguros={},ratiosHistorial=[],usuarioId=null,_mesContab
 let sortCol='fecha',sortDir=-1,paginaActual=1;
 const POR_PAGINA=25;
 let _ventaEliminarId=null,_chartInstance=null;
+// --- Perfiles y equipos ---
+let perfil=null,rolActual='comercial',rolesObjetivos={},ventasEquipo=[],equipoPerfiles=[],perfilesMap={};
+const ROL_LABEL={admin:'Administrador',manager:'Mánager',comercial:'Gestor Comercial',ceo:'Comercial Externo por Objetivos'};
+function esAdmin(){return rolActual==='admin';}
+function esManager(){return rolActual==='manager';}
+function puedeValidar(){return esAdmin()||esManager();}
+// Objetivo efectivo de una persona: su meta propia (>0) o el valor por defecto de su perfil
+function metaEfectiva(p){
+    const rd=rolesObjetivos[p.rol]||{meta_valor:0,meta_puntos:0};
+    const mv=(+p.meta_valor>0)?+p.meta_valor:+rd.meta_valor||0;
+    const mp=(+p.meta_puntos>0)?+p.meta_puntos:+rd.meta_puntos||0;
+    return{mv,mp};
+}
 
 function fromSupabase(v){
-    return{id:String(v.id||''),fecha:String(v.fecha||'').slice(0,10),poliza:v.poliza||'',cliente:v.cliente||'',
+    return{id:String(v.id||''),usuarioId:v.usuario_id||'',fecha:String(v.fecha||'').slice(0,10),poliza:v.poliza||'',cliente:v.cliente||'',
         tipoNombre:v.tipo_nombre||'',categoria:v.categoria||'',precio:parseFloat(v.precio)||0,
         valor:parseFloat(v.valor)||0,puntos:parseFloat(v.puntos)||0,mes:String(v.mes||'').slice(0,7),
         mesContable:String(v.mes_contable||v.mes||'').slice(0,7),movida:!!v.movida,notaMovida:v.nota_movida||'',
-        notas:v.notas||''};
+        notas:v.notas||'',estado:v.estado||'validada'};
 }
 
 function toSupabase(v){
-    return{usuario_id:usuarioId,fecha:v.fecha,poliza:v.poliza,cliente:v.cliente,tipo_nombre:v.tipoNombre,
+    return{usuario_id:v.usuarioId||usuarioId,fecha:v.fecha,poliza:v.poliza,cliente:v.cliente,tipo_nombre:v.tipoNombre,
         categoria:v.categoria,precio:v.precio,valor:v.valor,puntos:v.puntos,mes:v.mes,
         mes_contable:v.mesContable,movida:v.movida,nota_movida:v.notaMovida||'',notas:v.notas||''};
 }
@@ -425,24 +498,60 @@ async function init(){
     document.getElementById('fechaEfecto').valueAsDate=new Date();
     document.getElementById('mesContable').value=hoy;
     buildSelectSeguros();mostrarConfig();
-    // Cargar objetivos: primero Supabase, fallback localStorage
-    const{data:perfil}=await db.from('perfiles').select('meta_valor,meta_puntos').eq('id',usuarioId).single();
-    if(perfil?.meta_valor||perfil?.meta_puntos){
-        const mv=perfil.meta_valor||0,mp=perfil.meta_puntos||0;
-        localStorage.setItem('metaValor_'+usuarioId,mv);
-        localStorage.setItem('metaPuntos_'+usuarioId,mp);
-        if(mv)document.getElementById('cfgMetaValor').value=mv;
-        if(mp)document.getElementById('cfgMetaPuntos').value=mp;
-    }else{
-        const _mv=localStorage.getItem('metaValor_'+usuarioId);
-        const _mp=localStorage.getItem('metaPuntos_'+usuarioId);
-        if(_mv)document.getElementById('cfgMetaValor').value=parseFloat(_mv);
-        if(_mp)document.getElementById('cfgMetaPuntos').value=parseFloat(_mp);
-    }
+    // Cargar perfil, rol y objetivos efectivos
+    await cargarPerfilYObjetivos();
+    configurarUIporRol();
     setSyncing(true);
-    try{await Promise.all([cargarVentas(),cargarCierres()]);}
-    catch(e){console.error('Error al cargar:',e);toast('Error al conectar con la base de datos. Prueba recargar.','error');}
+    try{
+        await Promise.all([cargarVentas(),cargarCierres()]);
+        if(puedeValidar())await cargarEquipo();
+    }catch(e){console.error('Error al cargar:',e);toast('Error al conectar con la base de datos. Prueba recargar.','error');}
     setSyncing(false);
+}
+
+async function cargarPerfilYObjetivos(){
+    const{data:ro}=await db.from('roles_objetivos').select('*');
+    rolesObjetivos={};(ro||[]).forEach(r=>rolesObjetivos[r.rol]={meta_valor:+r.meta_valor,meta_puntos:+r.meta_puntos});
+    const{data:p}=await db.from('perfiles').select('*').eq('id',usuarioId).single();
+    perfil=p||{id:usuarioId,rol:'comercial',meta_valor:0,meta_puntos:0,manager_id:null,nombre:''};
+    rolActual=perfil.rol||'comercial';
+    const{mv,mp}=metaEfectiva(perfil);
+    localStorage.setItem('metaValor_'+usuarioId,mv);
+    localStorage.setItem('metaPuntos_'+usuarioId,mp);
+    renderObjetivoInfo(mv,mp);
+}
+
+function renderObjetivoInfo(mv,mp){
+    const el=document.getElementById('objetivoInfo');if(!el)return;
+    el.innerHTML=`Perfil: <strong>${ROL_LABEL[rolActual]||rolActual}</strong><br>
+      Meta de valor: <strong>${mv?mv.toFixed(2)+' €/mes':'—'}</strong><br>
+      Meta de puntos: <strong>${mp?mp.toFixed(0)+' /mes':'—'}</strong>`;
+}
+
+function configurarUIporRol(){
+    const tv=document.getElementById('tabValidacion'),ta=document.getElementById('tabAdmin');
+    if(tv)tv.style.display=puedeValidar()?'':'none';
+    if(ta)ta.style.display=esAdmin()?'':'none';
+    const hoy=new Date().toISOString().slice(0,7);
+    const vm=document.getElementById('valMes');if(vm&&!vm.value)vm.value=hoy;
+    const cem=document.getElementById('cardEquipoMeta');if(cem)cem.style.display=esManager()?'':'none';
+}
+
+async function cargarEquipo(){
+    // Perfiles accesibles por RLS (admin: todos; manager: su equipo + él mismo)
+    const{data:perfs}=await db.from('perfiles').select('id,nombre,rol,manager_id,meta_valor,meta_puntos,activo');
+    equipoPerfiles=perfs||[];
+    perfilesMap={};equipoPerfiles.forEach(p=>perfilesMap[p.id]=p);
+    // Ventas accesibles por RLS (manager: propias + equipo; admin: todas)
+    const{data:vts}=await db.from('ventas').select('*').order('fecha',{ascending:false});
+    ventasEquipo=(vts||[]).map(fromSupabase).filter(v=>v.id);
+    const selP=document.getElementById('valPersona');
+    if(selP){
+        const miembros=equipoPerfiles.filter(p=>esAdmin()||p.manager_id===usuarioId||p.id===usuarioId);
+        selP.innerHTML='<option value="">Todas las personas</option>'+miembros.map(p=>`<option value="${p.id}">${p.nombre||p.id.slice(0,8)}</option>`).join('');
+    }
+    renderValidacion();
+    if(esAdmin())renderAdmin();
 }
 
 async function logout(){await db.auth.signOut();localStorage.removeItem('perfil');window.location.href='index.html';}
@@ -486,12 +595,13 @@ async function guardarVenta(){
     const{rv,rp}=getRatioEnFechaLocal(tipo,nivel||null,fecha);
     const mesFecha=fecha.slice(0,7);
     const movida=mesContable!==mesFecha;
-    const venta={id:String(Date.now()),fecha,poliza,cliente,tipoNombre:seg.nombre+(nivel?` (${nivel})`:''),
+    const requiereValidacion=!!(perfil&&perfil.manager_id&&(rolActual==='comercial'||rolActual==='ceo'));
+    const venta={id:String(Date.now()),usuarioId,fecha,poliza,cliente,tipoNombre:seg.nombre+(nivel?` (${nivel})`:''),
         categoria:seg.categoria,precio,valor:parseFloat((precio*rv/100).toFixed(2)),
         puntos:parseFloat((precio*rp/100).toFixed(2)),mes:mesFecha,mesContable:mesContable||mesFecha,
-        movida,notaMovida:movida?notaMovida:'',notas};
+        movida,notaMovida:movida?notaMovida:'',notas,estado:requiereValidacion?'pendiente':'validada'};
     setSyncing(true);
-    const{data,error}=await db.from('ventas').insert([toSupabase(venta)]).select().single();
+    const{data,error}=await db.from('ventas').insert([{...toSupabase(venta),estado:venta.estado}]).select().single();
     if(error){console.error(error);toast('Error al guardar la venta','error');setSyncing(false);return;}
     venta.id=String(data.id);
     // Capturar totales antes de añadir la venta (para detectar si se alcanza el objetivo)
@@ -534,8 +644,10 @@ async function confirmarEliminar(){
     toast('Venta eliminada','success');setSyncing(false);
 }
 
+function findVentaAny(id){return ventas.find(v=>v.id===id)||ventasEquipo.find(v=>v.id===id);}
+
 function abrirEdicion(id){
-    const v=ventas.find(v=>v.id===id);if(!v)return;
+    const v=findVentaAny(id);if(!v)return;
 
     // Rellenar selector de tipos
     const selTipo=document.getElementById('editTipo');
@@ -578,7 +690,7 @@ function abrirEdicion(id){
 
 async function guardarEdicion(){
     const id=document.getElementById('editId').value;
-    const v=ventas.find(v=>v.id===id);if(!v)return;
+    const v=findVentaAny(id);if(!v)return;
     const tipo=document.getElementById('editTipo').value;
     const nivel=document.getElementById('editNivel').value;
     const nuevoPrecio=parseFloat(document.getElementById('editTarifa').value);
@@ -604,8 +716,10 @@ async function guardarEdicion(){
     setSyncing(true);
     const{error}=await db.from('ventas').update(toSupabase(updated)).eq('id',id);
     if(error){toast('Error al guardar','error');setSyncing(false);return;}
-    const idx=ventas.findIndex(v=>v.id===id);ventas[idx]=updated;
+    const idx=ventas.findIndex(v=>v.id===id);if(idx>=0)ventas[idx]=updated;
+    const ide=ventasEquipo.findIndex(v=>v.id===id);if(ide>=0)ventasEquipo[ide]=updated;
     renderTabla();renderTrimestres();renderResumen();renderStats();
+    if(puedeValidar())renderValidacion();
     cerrarModal('modalEdit');toast('Cambios guardados ✓','success');setSyncing(false);
 }
 
@@ -707,10 +821,10 @@ function renderTabla(){
     const ini=(paginaActual-1)*POR_PAGINA;
     const pag=lista.slice(ini,ini+POR_PAGINA);
     if(!lista.length){tbody.innerHTML='<tr><td colspan="9" class="empty-state">No hay ventas para este filtro</td></tr>';renderPaginacion(0,1);return;}
-    tbody.innerHTML=pag.map(v=>`<tr class="${v.movida?'movida':''}">
+    tbody.innerHTML=pag.map(v=>`<tr class="${v.movida?'movida':''} ${v.estado==='pendiente'?'pendiente':v.estado==='rechazada'?'rechazada':''}">
         <td>${fmt(v.fecha)}</td><td style="font-family:'DM Mono',monospace;">${v.poliza}</td>
         <td>${v.cliente}${v.notas?` <span title="${v.notas.replace(/"/g,'&quot;')}" style="cursor:help;color:var(--text3);">📝</span>`:''}</td>
-        <td><span class="badge badge-${v.categoria}">${v.tipoNombre}</span>${v.movida?'<span class="badge badge-moved">↕ movida</span>':''}</td>
+        <td><span class="badge badge-${v.categoria}">${v.tipoNombre}</span>${v.movida?'<span class="badge badge-moved">↕ movida</span>':''}${v.estado==='pendiente'?'<span class="badge badge-pendiente">⏳ pendiente</span>':v.estado==='rechazada'?'<span class="badge badge-rechazada">✗ rechazada</span>':''}</td>
         <td>${(+v.precio).toFixed(2)}€</td><td style="color:var(--success);font-weight:600;">${(+v.valor).toFixed(2)}€</td>
         <td style="color:var(--accent);font-weight:600;">${(+v.puntos).toFixed(2)}</td>
         <td style="font-family:'DM Mono',monospace;color:${v.movida?'var(--moved)':''};">${v.mesContable||v.mes}</td>
@@ -1135,6 +1249,163 @@ function exportarCSVHistorial(){
     const csv=[h,...r].map(x=>x.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
     const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
     a.download='historial_'+(mf||'todas')+'.csv';a.click();
+}
+
+// ===================== VALIDACIÓN (bandeja del mánager) =====================
+function ventasUniverso(){
+    // admin: todas; manager: solo las de su equipo (no las propias)
+    return ventasEquipo.filter(v=>{
+        if(esAdmin())return true;
+        const sp=perfilesMap[v.usuarioId];
+        return sp&&sp.manager_id===usuarioId;
+    });
+}
+
+function renderValidacion(){
+    if(!puedeValidar())return;
+    renderEquipoProgreso();
+    actualizarBadgeValidacion();
+    const estado=document.getElementById('valEstado').value;
+    const persona=document.getElementById('valPersona').value;
+    const fmes=document.getElementById('valFiltroMes').value;
+    const busq=(document.getElementById('valBusqueda').value||'').toLowerCase().trim();
+    const tbody=document.getElementById('tbodyValidacion');
+    let lista=ventasUniverso();
+    if(estado)lista=lista.filter(v=>v.estado===estado);
+    if(persona)lista=lista.filter(v=>v.usuarioId===persona);
+    if(fmes)lista=lista.filter(v=>(v.mesContable||v.mes)===fmes);
+    if(busq)lista=lista.filter(v=>v.cliente.toLowerCase().includes(busq)||v.poliza.toLowerCase().includes(busq));
+    lista.sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+    if(!lista.length){tbody.innerHTML='<tr><td colspan="10" class="empty-state">No hay ventas para este filtro</td></tr>';return;}
+    const badge={pendiente:'<span class="badge badge-pendiente">⏳ pendiente</span>',validada:'<span class="badge badge-validada">✓ validada</span>',rechazada:'<span class="badge badge-rechazada">✗ rechazada</span>'};
+    tbody.innerHTML=lista.map(v=>{
+        const vend=(perfilesMap[v.usuarioId]||{}).nombre||v.usuarioId.slice(0,8);
+        const acc=[];
+        if(v.estado!=='validada')acc.push(`<button class="btn btn-success btn-sm" title="Validar" onclick="validarVenta('${v.id}','validada')">✓</button>`);
+        if(v.estado!=='rechazada')acc.push(`<button class="btn btn-danger btn-sm" title="Rechazar" onclick="validarVenta('${v.id}','rechazada')">✗</button>`);
+        acc.push(`<button class="btn btn-ghost btn-sm" title="Editar importes" onclick="abrirEdicion('${v.id}')">✏️</button>`);
+        return `<tr class="${v.estado==='pendiente'?'pendiente':v.estado==='rechazada'?'rechazada':''}">
+            <td>${fmt(v.fecha)}</td><td>${vend}</td>
+            <td style="font-family:'DM Mono',monospace;">${v.poliza}</td><td>${v.cliente}</td>
+            <td><span class="badge badge-${v.categoria}">${v.tipoNombre}</span></td>
+            <td>${(+v.precio).toFixed(2)}€</td>
+            <td style="color:var(--success);font-weight:600;">${(+v.valor).toFixed(2)}€</td>
+            <td style="color:var(--accent);font-weight:600;">${(+v.puntos).toFixed(2)}</td>
+            <td>${badge[v.estado]||v.estado}</td>
+            <td style="white-space:nowrap;">${acc.join(' ')}</td>
+        </tr>`;
+    }).join('');
+}
+
+function actualizarBadgeValidacion(){
+    const n=ventasUniverso().filter(v=>v.estado==='pendiente').length;
+    const b=document.getElementById('tabValidacionBadge');
+    if(b){b.textContent=n;b.style.display=n>0?'':'none';}
+}
+
+function renderEquipoProgreso(){
+    const cem=document.getElementById('cardEquipoMeta');
+    if(!esManager()){if(cem)cem.style.display='none';return;}
+    cem.style.display='';
+    const mes=document.getElementById('valMes').value||new Date().toISOString().slice(0,7);
+    const miembros=equipoPerfiles.filter(p=>p.manager_id===usuarioId);
+    let metaV=0,metaP=0;
+    miembros.forEach(p=>{const m=metaEfectiva(p);metaV+=m.mv;metaP+=m.mp;});
+    const ids=new Set(miembros.map(p=>p.id));
+    const vs=ventasEquipo.filter(v=>ids.has(v.usuarioId)&&(v.mesContable||v.mes)===mes&&v.estado!=='rechazada');
+    const valor=vs.reduce((s,v)=>s+(+v.valor),0);
+    const puntos=vs.reduce((s,v)=>s+(+v.puntos),0);
+    const NM=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const[yy,mm]=mes.split('-');
+    function barra(actual,meta,etiqueta,suf){
+        if(!meta)return `<div style="margin-bottom:12px;"><div style="font-size:0.75rem;font-weight:700;color:var(--text3);text-transform:uppercase;">${etiqueta}: ${actual.toFixed(suf==='€'?2:0)}${suf} (sin objetivo de equipo)</div></div>`;
+        const pct=Math.min(100,actual/meta*100),done=pct>=100,falta=meta-actual;
+        return `<div style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
+                <span style="font-size:0.75rem;font-weight:700;color:${done?'var(--success)':'var(--text2)'};text-transform:uppercase;letter-spacing:0.06em;">${etiqueta}${done?' 🎉':''}</span>
+                <span style="font-size:0.82rem;font-family:'DM Mono',monospace;color:${done?'var(--success)':'var(--text3)'};">${actual.toFixed(suf==='€'?2:0)}${suf} <span style="color:var(--text3);">/ ${meta.toFixed(suf==='€'?2:0)}${suf}</span></span>
+            </div>
+            <div class="progress-wrap"><div class="progress-bar${done?' done':''}" style="width:${pct.toFixed(1)}%;"></div></div>
+            <div style="text-align:right;font-size:0.75rem;font-weight:700;color:${done?'var(--success)':'var(--text3)'};margin-top:3px;">${done?'¡Conseguido! ✓':pct.toFixed(0)+'% — faltan '+(falta>0?falta.toFixed(suf==='€'?2:0)+suf:'0')}</div>
+        </div>`;
+    }
+    document.getElementById('equipoProgreso').innerHTML=
+        `<div style="font-size:0.82rem;color:var(--text3);margin-bottom:10px;">${NM[parseInt(mm)-1]} ${yy} · ${miembros.length} persona${miembros.length!==1?'s':''} en el equipo</div>`+
+        barra(valor,metaV,'Valor equipo','€')+barra(puntos,metaP,'Puntos equipo','');
+}
+
+async function validarVenta(id,estado){
+    setSyncing(true);
+    const payload={estado};
+    if(estado==='validada'||estado==='rechazada'){payload.validada_por=usuarioId;payload.validada_en=new Date().toISOString();}
+    else{payload.validada_por=null;payload.validada_en=null;}
+    const{error}=await db.from('ventas').update(payload).eq('id',id);
+    if(error){console.error(error);toast('Error al actualizar','error');setSyncing(false);return;}
+    const ve=ventasEquipo.find(v=>v.id===id);if(ve)ve.estado=estado;
+    const vo=ventas.find(v=>v.id===id);if(vo)vo.estado=estado;
+    renderValidacion();renderTabla();renderStats();
+    toast(estado==='validada'?'Venta validada ✓':estado==='rechazada'?'Venta rechazada':'Marcada pendiente','success');
+    setSyncing(false);
+}
+
+// ===================== PANEL DE ADMIN =====================
+function renderAdmin(){
+    if(!esAdmin())return;
+    renderRolesObjetivos();
+    const tbody=document.getElementById('tbodyAdmin');if(!tbody)return;
+    const managers=equipoPerfiles.filter(p=>p.rol==='manager');
+    const rolOpts=p=>['comercial','ceo','manager','admin'].map(r=>`<option value="${r}" ${p.rol===r?'selected':''}>${ROL_LABEL[r]}</option>`).join('');
+    const mgrOpts=p=>'<option value="">—</option>'+managers.map(m=>`<option value="${m.id}" ${p.manager_id===m.id?'selected':''}>${m.nombre||m.id.slice(0,8)}</option>`).join('');
+    tbody.innerHTML=equipoPerfiles.map(p=>`<tr>
+        <td>${p.nombre||'<span style="color:var(--text3)">(sin nombre)</span>'}</td>
+        <td><select id="ad_rol_${p.id}" style="min-width:120px;">${rolOpts(p)}</select></td>
+        <td><select id="ad_mgr_${p.id}" style="min-width:120px;">${mgrOpts(p)}</select></td>
+        <td><input type="number" id="ad_mv_${p.id}" value="${+p.meta_valor||0}" step="0.01" min="0" style="width:85px;"></td>
+        <td><input type="number" id="ad_mp_${p.id}" value="${+p.meta_puntos||0}" step="0.01" min="0" style="width:85px;"></td>
+        <td style="text-align:center;"><input type="checkbox" id="ad_act_${p.id}" ${p.activo!==false?'checked':''}></td>
+        <td><button class="btn btn-primary btn-sm" onclick="guardarPerfilRow('${p.id}')">💾</button></td>
+    </tr>`).join('');
+}
+
+function renderRolesObjetivos(){
+    const body=document.getElementById('rolesObjetivosBody');if(!body)return;
+    const roles=['comercial','ceo','manager'];
+    body.innerHTML=`<div style="display:grid;grid-template-columns:1fr 110px 110px;gap:8px;padding:4px 0;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text3);"><span>Perfil</span><span>Valor €</span><span>Puntos</span></div>`+
+    roles.map(r=>{const o=rolesObjetivos[r]||{meta_valor:0,meta_puntos:0};
+        return `<div style="display:grid;grid-template-columns:1fr 110px 110px;gap:8px;align-items:center;margin-bottom:8px;">
+            <span style="font-size:0.85rem;">${ROL_LABEL[r]}</span>
+            <input type="number" id="ro_v_${r}" value="${+o.meta_valor||0}" step="0.01" min="0">
+            <input type="number" id="ro_p_${r}" value="${+o.meta_puntos||0}" step="0.01" min="0">
+        </div>`;}).join('');
+}
+
+async function guardarRolesObjetivos(){
+    const roles=['comercial','ceo','manager'];
+    const rows=roles.map(r=>({rol:r,meta_valor:parseFloat(document.getElementById('ro_v_'+r).value)||0,meta_puntos:parseFloat(document.getElementById('ro_p_'+r).value)||0}));
+    setSyncing(true);
+    const{error}=await db.from('roles_objetivos').upsert(rows,{onConflict:'rol'});
+    if(error){console.error(error);toast('Error al guardar','error');setSyncing(false);return;}
+    rows.forEach(r=>rolesObjetivos[r.rol]={meta_valor:r.meta_valor,meta_puntos:r.meta_puntos});
+    const{mv,mp}=metaEfectiva(perfil);localStorage.setItem('metaValor_'+usuarioId,mv);localStorage.setItem('metaPuntos_'+usuarioId,mp);
+    renderObjetivoInfo(mv,mp);renderStats();
+    toast('Objetivos de perfil guardados ✓','success');setSyncing(false);
+}
+
+async function guardarPerfilRow(id){
+    const rol=document.getElementById('ad_rol_'+id).value;
+    const mgr=document.getElementById('ad_mgr_'+id).value||null;
+    const payload={rol,
+        manager_id:(rol==='comercial'||rol==='ceo')?mgr:null,
+        meta_valor:parseFloat(document.getElementById('ad_mv_'+id).value)||0,
+        meta_puntos:parseFloat(document.getElementById('ad_mp_'+id).value)||0,
+        activo:document.getElementById('ad_act_'+id).checked};
+    setSyncing(true);
+    const{error}=await db.from('perfiles').update(payload).eq('id',id);
+    if(error){console.error(error);toast('Error: '+(error.message||'no se pudo guardar'),'error');setSyncing(false);return;}
+    const p=perfilesMap[id];if(p)Object.assign(p,payload);
+    if(id===usuarioId){perfil=Object.assign(perfil||{},payload);rolActual=rol;const{mv,mp}=metaEfectiva(perfil);localStorage.setItem('metaValor_'+usuarioId,mv);localStorage.setItem('metaPuntos_'+usuarioId,mp);renderObjetivoInfo(mv,mp);}
+    renderAdmin();renderValidacion();
+    toast('Perfil actualizado ✓','success');setSyncing(false);
 }
 
 function limpiarForm(){
